@@ -37,7 +37,25 @@ router.post('/register',
       const verificationToken = crypto.randomBytes(32).toString('hex');
       const verificationExpires = Date.now() + 24 * 3600000; // 24 hours
 
-      // Create new user
+      // First try to send the verification email before creating the user
+      const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
+      try {
+        await sendEmail({
+          to: email,
+          subject: 'Verify Your Email',
+          html: `
+            <h2>Welcome to Deadbox!</h2>
+            <p>Please verify your email by clicking the link below:</p>
+            <a href="${verificationUrl}">Verify Email</a>
+            <p>This link will expire in 24 hours.</p>
+          `
+        });
+      } catch (emailError) {
+        console.error('Email sending error:', emailError);
+        return res.status(500).json({ error: 'Failed to send verification email. Please try again.' });
+      }
+
+      // If email sent successfully, create the user
       const user = new User({
         name,
         email,
@@ -49,19 +67,6 @@ router.post('/register',
       });
 
       await user.save();
-
-      // Send verification email
-      const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
-      await sendEmail({
-        to: email,
-        subject: 'Verify Your Email',
-        html: `
-          <h2>Welcome to Deadbox!</h2>
-          <p>Please verify your email by clicking the link below:</p>
-          <a href="${verificationUrl}">Verify Email</a>
-          <p>This link will expire in 24 hours.</p>
-        `
-      });
 
       res.status(201).json({
         message: 'Registration successful. Please check your email to verify your account.'
@@ -76,10 +81,6 @@ router.post('/register',
       }
       if (error.code === 11000) {
         return res.status(400).json({ error: 'Email already exists' });
-      }
-      if (error.message.includes('Failed to send email')) {
-        console.error('Email sending error:', error);
-        return res.status(500).json({ error: 'Failed to send verification email. Please try again.' });
       }
       console.error('Unexpected registration error:', error);
       res.status(500).json({ error: 'Registration failed. Please try again.' });
@@ -269,12 +270,8 @@ router.post('/reset-password/:token',
         return res.status(400).json({ error: 'Invalid or expired reset token' });
       }
 
-      // Hash new password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-
-      // Update password and clear reset token
-      user.password = hashedPassword;
+      // Set the new password (it will be hashed by the pre-save middleware)
+      user.password = password;
       user.resetPasswordToken = undefined;
       user.resetPasswordExpires = undefined;
       await user.save();

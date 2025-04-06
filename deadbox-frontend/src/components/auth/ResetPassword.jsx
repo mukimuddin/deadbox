@@ -20,6 +20,8 @@ const ResetPassword = () => {
       ...prev,
       [name]: value
     }));
+    // Clear errors when user starts typing
+    setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -27,8 +29,14 @@ const ResetPassword = () => {
     setError('');
     setSuccess('');
 
+    // Validate inputs
     if (!formData.password || !formData.confirmPassword) {
-      setError('All fields are required');
+      setError('Both password fields are required');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
       return;
     }
 
@@ -37,20 +45,27 @@ const ResetPassword = () => {
       return;
     }
 
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-
     setIsLoading(true);
     try {
-      await auth.resetPassword(token, formData.password);
-      setSuccess('Password reset successful. You can now login with your new password.');
+      const response = await auth.resetPassword(token, formData.password);
+      setSuccess('Password reset successful! Redirecting to login...');
       setTimeout(() => {
-        navigate('/login');
+        navigate('/login', { 
+          state: { 
+            message: 'Your password has been reset successfully. Please login with your new password.',
+            type: 'success'
+          } 
+        });
       }, 3000);
     } catch (error) {
-      setError(error.response?.data?.error || 'Failed to reset password');
+      console.error('Reset password error:', error);
+      if (error.response?.data?.error) {
+        setError(error.response.data.error);
+      } else if (error.response?.status === 400) {
+        setError('Invalid or expired reset link. Please request a new password reset.');
+      } else {
+        setError('Failed to reset password. Please try again or request a new reset link.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +84,10 @@ const ResetPassword = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
+              placeholder="Enter your new password"
               className={error ? 'error' : ''}
+              minLength="6"
+              required
             />
           </div>
 
@@ -81,19 +99,24 @@ const ResetPassword = () => {
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
+              placeholder="Confirm your new password"
               className={error ? 'error' : ''}
+              minLength="6"
+              required
             />
-            {error && <span className="error-message">{error}</span>}
-            {success && <span className="success-message">{success}</span>}
           </div>
 
+          {error && <div className="error-message">{error}</div>}
+          {success && <div className="success-message">{success}</div>}
+
           <button type="submit" disabled={isLoading}>
-            {isLoading ? 'Resetting...' : 'Reset Password'}
+            {isLoading ? 'Resetting Password...' : 'Reset Password'}
           </button>
         </form>
 
         <div className="auth-footer">
           <p>Remember your password? <a href="/login">Login</a></p>
+          <p>Need a new reset link? <a href="/forgot-password">Request Reset</a></p>
         </div>
       </div>
     </div>

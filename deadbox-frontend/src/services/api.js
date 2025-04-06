@@ -72,7 +72,10 @@ export const auth = {
   getProfile: () => api.get('/users/profile'),
   updateProfile: (userData) => api.patch('/users/profile', userData),
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-  resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
+  resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { 
+    password,
+    confirmPassword: password
+  }),
   verifyEmail: (token) => api.get(`/auth/verify-email/${token}`),
   resendVerification: (email) => api.post('/auth/resend-verification', { email }),
 };
