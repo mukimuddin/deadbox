@@ -16,7 +16,7 @@ const { setupSecurity, corsOptions } = require("./middleware/security");
 const { setupPerformance, setupIndexes } = require("./middleware/performance");
 const { sanitizeInput } = require("./middleware/validation");
 const userRoutes = require("./routes/userRoutes");
-const letterRoutes = require("./routes/letterRoutes");
+const letterRoutes = require("./routes/letters");
 const authRoutes = require("./routes/auth");
 const { checkInactivity, checkScheduledDeliveries } = require("./services/triggerService");
 const { cleanupUnverifiedAccounts } = require('./services/cleanupService');
@@ -25,19 +25,18 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://deadbox.vercel.app', 'https://www.deadbox.vercel.app', 'https://deadbox.onrender.com']
-    : ['http://localhost:5173', 'http://localhost:3000'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors(corsOptions));
+
+// Apply security middleware
+setupSecurity(app);
+
+// Apply performance middleware
+setupPerformance(app);
 
 // Routes
-app.use("/auth", authRoutes);
-app.use("/users", userRoutes);
-app.use("/letters", letterRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/letters', letterRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

@@ -12,17 +12,26 @@ const letterSchema = new mongoose.Schema({
   },
   title: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   message: {
     type: String,
-    required: true
+    required: true,
+    trim: true
+  },
+  attachment: {
+    url: String,
+    type: String
   },
   videoLink: {
     type: String
   },
   scheduledDate: {
-    type: Date
+    type: Date,
+    required: function() {
+      return this.triggerType === 'date';
+    }
   },
   triggerType: {
     type: String,
@@ -31,6 +40,9 @@ const letterSchema = new mongoose.Schema({
   },
   inactivityDays: {
     type: Number,
+    required: function() {
+      return this.triggerType === 'inactivity';
+    },
     min: 1
   },
   isDelivered: {
@@ -46,6 +58,15 @@ const letterSchema = new mongoose.Schema({
   },
   unlockDate: {
     type: Date
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'scheduled', 'sent', 'failed'],
+    default: 'draft'
+  },
+  lastModified: {
+    type: Date,
+    default: Date.now
   }
 }, {
   timestamps: true
@@ -54,5 +75,11 @@ const letterSchema = new mongoose.Schema({
 // Index for efficient querying
 letterSchema.index({ userId: 1, isDelivered: 1 });
 letterSchema.index({ scheduledDate: 1, isDelivered: 1 });
+
+// Update lastModified on save
+letterSchema.pre('save', function(next) {
+  this.lastModified = new Date();
+  next();
+});
 
 module.exports = mongoose.model("Letter", letterSchema);

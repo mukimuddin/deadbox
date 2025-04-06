@@ -3,10 +3,10 @@ const router = express.Router();
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth');
 
 // Get user profile
-router.get('/profile', auth, async (req, res) => {
+router.get('/profile', authenticate, async (req, res) => {
   try {
     res.json(req.user);
   } catch (error) {
@@ -15,7 +15,7 @@ router.get('/profile', auth, async (req, res) => {
 });
 
 // Update user profile
-router.patch('/profile', auth, async (req, res) => {
+router.patch('/profile', authenticate, async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ['name', 'email', 'password', 'familyEmail'];
   const isValidOperation = updates.every(update => allowedUpdates.includes(update));

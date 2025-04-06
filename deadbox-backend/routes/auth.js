@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const { body } = require('express-validator');
 const { commonRules, validateInput } = require('../middleware/validation');
 const User = require('../models/User');
-const { sendEmail } = require('../services/email');
+const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/emailService');
 const emailValidator = require('deep-email-validator');
 
 // Function to validate email
@@ -95,18 +95,8 @@ router.post('/register',
       const verificationExpires = Date.now() + 24 * 3600000; // 24 hours
 
       // First try to send the verification email
-      const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
       try {
-        await sendEmail({
-          to: email,
-          subject: 'Verify Your Email',
-          html: `
-            <h2>Welcome to Deadbox!</h2>
-            <p>Please verify your email by clicking the link below:</p>
-            <a href="${verificationUrl}">Verify Email</a>
-            <p>This link will expire in 24 hours.</p>
-          `
-        });
+        await sendVerificationEmail(email, verificationToken);
       } catch (emailError) {
         console.error('Email sending error:', emailError);
         return res.status(500).json({ error: 'Failed to send verification email. Please try again.' });
@@ -195,17 +185,7 @@ router.post('/resend-verification',
       await user.save();
 
       // Send verification email
-      const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
-      await sendEmail({
-        to: email,
-        subject: 'Verify Your Email',
-        html: `
-          <h2>Verify Your Email</h2>
-          <p>Please verify your email by clicking the link below:</p>
-          <a href="${verificationUrl}">Verify Email</a>
-          <p>This link will expire in 24 hours.</p>
-        `
-      });
+      await sendVerificationEmail(email, verificationToken);
 
       res.json({ message: 'Verification email sent' });
     } catch (error) {
@@ -281,22 +261,16 @@ router.post('/forgot-password',
       await user.save();
 
       // Send reset email
-      const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-      await sendEmail({
-        to: email,
-        subject: 'Password Reset Request',
-        html: `
-          <h2>Password Reset Request</h2>
-          <p>You requested a password reset. Click the link below to reset your password:</p>
-          <a href="${resetUrl}">Reset Password</a>
-          <p>This link will expire in 1 hour.</p>
-          <p>If you didn't request this, please ignore this email.</p>
-        `
-      });
-
-      res.json({ message: 'Password reset email sent' });
+      try {
+        await sendPasswordResetEmail(email, resetToken);
+        res.json({ message: 'Password reset email sent' });
+      } catch (emailError) {
+        console.error('Failed to send password reset email:', emailError);
+        res.status(500).json({ error: 'Failed to send password reset email. Please try again.' });
+      }
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error('Password reset error:', error);
+      res.status(500).json({ error: 'Password reset request failed. Please try again.' });
     }
   }
 );

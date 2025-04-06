@@ -10,91 +10,82 @@ const sanitizeOptions = {
 
 // Common validation rules
 const commonRules = {
-  email: [
-    body('email')
-      .isEmail()
-      .withMessage('Please provide a valid email address')
-      .normalizeEmail()
-  ],
-  password: [
-    body('password')
-      .isLength({ min: 6 })
-      .withMessage('Password must be at least 6 characters long')
-  ],
-  name: [
-    body('name')
-      .notEmpty()
-      .withMessage('Name is required')
-      .trim()
-      .escape()
-  ],
-  familyEmail: [
-    body('familyEmail')
-      .isEmail()
-      .withMessage('Please provide a valid family email address')
-      .normalizeEmail()
-  ],
-  familyKey: [
-    body('familyKey')
-      .notEmpty()
-      .withMessage('Family key is required')
-      .isLength({ min: 6 })
-      .withMessage('Family key must be at least 6 characters long')
-      .trim()
-  ],
-  title: [
-    body('title')
-      .trim()
-      .isLength({ min: 1, max: 100 })
-      .withMessage('Title must be between 1 and 100 characters')
-  ],
-  message: [
-    body('message')
-      .trim()
-      .isLength({ min: 1, max: 10000 })
-      .withMessage('Message must be between 1 and 10000 characters')
-  ],
-  triggerType: [
-    body('triggerType')
-      .isIn(['date', 'inactivity'])
-      .withMessage('Trigger type must be either "date" or "inactivity"')
-  ],
-  scheduledDate: [
-    body('scheduledDate')
-      .if(body('triggerType').equals('date'))
-      .isISO8601()
-      .withMessage('Scheduled date must be a valid ISO 8601 date')
-      .custom((value) => {
-        const date = new Date(value);
-        const now = new Date();
-        return date > now;
-      })
-      .withMessage('Scheduled date must be in the future')
-  ],
-  inactivityDays: [
-    body('inactivityDays')
-      .if(body('triggerType').equals('inactivity'))
-      .isInt({ min: 1, max: 365 })
-      .withMessage('Inactivity days must be between 1 and 365')
-  ]
+  name: body('name')
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Name must be between 2 and 50 characters'),
+
+  email: body('email')
+    .trim()
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please enter a valid email address'),
+
+  password: body('password')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters long')
+    .matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]/)
+    .withMessage('Password must contain at least one letter and one number'),
+
+  familyKey: body('familyKey')
+    .trim()
+    .isLength({ min: 6, max: 50 })
+    .withMessage('Family key must be between 6 and 50 characters'),
+
+  familyEmail: body('familyEmail')
+    .trim()
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please enter a valid family email address'),
+
+  title: body('title')
+    .trim()
+    .isLength({ min: 1, max: 200 })
+    .withMessage('Title must be between 1 and 200 characters')
+    .customSanitizer(value => sanitizeHtml(value)),
+
+  message: body('message')
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage('Message cannot be empty')
+    .customSanitizer(value => sanitizeHtml(value)),
+
+  triggerType: body('triggerType')
+    .trim()
+    .isIn(['date', 'inactivity'])
+    .withMessage('Invalid trigger type'),
+
+  scheduledDate: body('scheduledDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Invalid date format'),
+
+  inactivityDays: body('inactivityDays')
+    .optional()
+    .isInt({ min: 1, max: 365 })
+    .withMessage('Inactivity days must be between 1 and 365')
 };
 
-// Sanitize input
+// Input sanitization middleware
 const sanitizeInput = (req, res, next) => {
-  if (req.body.title) {
-    req.body.title = sanitizeHtml(req.body.title, sanitizeOptions);
-  }
-  if (req.body.message) {
-    req.body.message = sanitizeHtml(req.body.message, sanitizeOptions);
+  if (req.body) {
+    Object.keys(req.body).forEach(key => {
+      if (typeof req.body[key] === 'string') {
+        req.body[key] = sanitizeHtml(req.body[key]);
+      }
+    });
   }
   next();
 };
 
-// Validate input
-const validateInput = (req, res, next) => {
+// Validate input against rules
+const validateInput = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({ 
+      error: 'Validation failed',
+      details: errors.array().map(err => err.msg)
+    });
   }
   next();
 };

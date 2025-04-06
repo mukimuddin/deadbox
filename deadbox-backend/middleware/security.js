@@ -13,12 +13,14 @@ const limiter = rateLimit({
 
 // CORS configuration
 const corsOptions = {
-  origin: true, // Allow all origins in development
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://deadbox.vercel.app', 'https://www.deadbox.vercel.app', 'https://deadbox.onrender.com']
+    : ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true,
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600 // 10 minutes
 };
 
 // Input validation middleware
@@ -49,10 +51,20 @@ const setupSecurity = (app) => {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "http://localhost:5000", "http://localhost:5173"]
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        connectSrc: ["'self'", 
+          "http://localhost:5000", 
+          "http://localhost:5173",
+          "https://deadbox.vercel.app",
+          "https://www.deadbox.vercel.app",
+          "https://deadbox.onrender.com"
+        ],
+        fontSrc: ["'self'", "https:", "data:"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'", "https:", "blob:"],
+        frameSrc: ["'self'"]
       }
     }
   }));

@@ -1,40 +1,39 @@
-const User = require('../models/User');
 const Letter = require('../models/Letter');
-const { sendEmail } = require('./email');
+const User = require('../models/User');
+const { sendEmail } = require('./emailService');
 
-// Check for user inactivity
+// Check for letters that should be sent based on inactivity
 const checkInactivity = async () => {
   try {
-    const users = await User.find({});
-    const now = new Date();
-    
-    for (const user of users) {
-      if (user.lastActivity) {
-        const daysSinceLastActivity = Math.floor((now - user.lastActivity) / (1000 * 60 * 60 * 24));
-        
-        // Check for letters that should be sent due to inactivity
-        const letters = await Letter.find({
-          userId: user._id,
-          triggerType: 'inactivity',
-          isSent: false,
-          inactivityDays: { $lte: daysSinceLastActivity }
+    const letters = await Letter.find({
+      triggerType: 'inactivity',
+      isSent: false,
+      isUnlocked: false
+    }).populate('userId');
+
+    for (const letter of letters) {
+      const user = letter.userId;
+      const lastActivity = user.lastActivity || user.updatedAt;
+      const inactivityDays = letter.inactivityDays;
+      const inactivityThreshold = new Date();
+      inactivityThreshold.setDate(inactivityThreshold.getDate() - inactivityDays);
+
+      if (lastActivity < inactivityThreshold) {
+        // Send email to family member
+        await sendEmail({
+          to: user.familyEmail,
+          subject: 'A Letter Has Been Released',
+          html: `
+            <h1>A Letter Has Been Released</h1>
+            <p>Due to ${user.name}'s inactivity for ${inactivityDays} days, a letter has been released.</p>
+            <p>To read the letter, please visit the following link:</p>
+            <a href="${process.env.FRONTEND_URL}/letters/${letter._id}/unlock">Read Letter</a>
+          `
         });
-        
-        for (const letter of letters) {
-          await sendEmail({
-            to: user.familyEmail,
-            subject: `Deadbox Letter: ${letter.title}`,
-            html: `
-              <h2>${letter.title}</h2>
-              <p>${letter.message}</p>
-              ${letter.videoLink ? `<p>Video Link: ${letter.videoLink}</p>` : ''}
-            `
-          });
-          
-          letter.isSent = true;
-          letter.sentDate = now;
-          await letter.save();
-        }
+
+        letter.isSent = true;
+        letter.sentDate = new Date();
+        await letter.save();
       }
     }
   } catch (error) {
@@ -42,33 +41,34 @@ const checkInactivity = async () => {
   }
 };
 
-// Check for scheduled deliveries
+// Check for scheduled letters that should be sent
 const checkScheduledDeliveries = async () => {
   try {
-    const now = new Date();
     const letters = await Letter.find({
       triggerType: 'date',
       isSent: false,
-      scheduledDate: { $lte: now }
-    });
-    
+      isUnlocked: false,
+      scheduledDate: { $lte: new Date() }
+    }).populate('userId');
+
     for (const letter of letters) {
-      const user = await User.findById(letter.userId);
-      if (user) {
-        await sendEmail({
-          to: user.familyEmail,
-          subject: `Deadbox Letter: ${letter.title}`,
-          html: `
-            <h2>${letter.title}</h2>
-            <p>${letter.message}</p>
-            ${letter.videoLink ? `<p>Video Link: ${letter.videoLink}</p>` : ''}
-          `
-        });
-        
-        letter.isSent = true;
-        letter.sentDate = now;
-        await letter.save();
-      }
+      const user = letter.userId;
+
+      // Send email to family member
+      await sendEmail({
+        to: user.familyEmail,
+        subject: 'A Scheduled Letter Has Been Released',
+        html: `
+          <h1>A Scheduled Letter Has Been Released</h1>
+          <p>A letter from ${user.name} has been released as scheduled.</p>
+          <p>To read the letter, please visit the following link:</p>
+          <a href="${process.env.FRONTEND_URL}/letters/${letter._id}/unlock">Read Letter</a>
+        `
+      });
+
+      letter.isSent = true;
+      letter.sentDate = new Date();
+      await letter.save();
     }
   } catch (error) {
     console.error('Error checking scheduled deliveries:', error);
