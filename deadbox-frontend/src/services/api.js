@@ -1,18 +1,15 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL,
   headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  },
-  withCredentials: true,
-  timeout: 10000
+    'Content-Type': 'application/json'
+  }
 });
 
-// Add token to requests if it exists
+// Add a request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -22,71 +19,42 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
 
-// Handle response errors
+// Add a response interceptor
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response) {
-      // Server responded with error status
-      console.error('Server error:', error.response.data);
-      switch (error.response.status) {
-        case 401:
-          // Unauthorized - clear token and redirect to login
-          localStorage.removeItem('token');
-          window.location.href = '/login';
-          break;
-        case 403:
-          // Forbidden - show access denied message
-          console.error('Access denied');
-          break;
-        case 404:
-          // Not found - show not found message
-          console.error('Resource not found');
-          break;
-        case 500:
-          // Server error - show server error message
-          console.error('Server error');
-          break;
-        default:
-          console.error('An error occurred:', error.response.data);
-      }
-    } else if (error.request) {
-      // Request made but no response received
-      console.error('No response received from server:', error.request);
-    } else {
-      // Error in request setup
-      console.error('Error setting up request:', error.message);
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
 
 export const auth = {
-  login: (email, password) => api.post('/auth/login', { email, password }),
-  register: (userData) => api.post('/auth/register', userData),
-  getProfile: () => api.get('/users/profile'),
-  updateProfile: (userData) => api.patch('/users/profile', userData),
-  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-  resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { 
+  login: (email, password) => api.post('/api/auth/login', { email, password }),
+  register: (userData) => api.post('/api/auth/register', userData),
+  getProfile: () => api.get('/api/users/profile'),
+  updateProfile: (userData) => api.patch('/api/users/profile', userData),
+  forgotPassword: (email) => api.post('/api/auth/forgot-password', { email }),
+  resetPassword: (token, password) => api.post(`/api/auth/reset-password/${token}`, { 
     password,
     confirmPassword: password
   }),
-  verifyEmail: (token) => api.get(`/auth/verify-email/${token}`),
-  resendVerification: (email) => api.post('/auth/resend-verification', { email }),
+  verifyEmail: (token) => api.get(`/api/auth/verify-email/${token}`),
+  resendVerification: (email) => api.post('/api/auth/resend-verification', { email })
 };
 
 export const letters = {
-  getAll: () => api.get('/letters'),
-  getById: (id) => api.get(`/letters/${id}`),
-  create: (letterData) => api.post('/letters', letterData),
-  update: (id, letterData) => api.put(`/letters/${id}`, letterData),
-  delete: (id) => api.delete(`/letters/${id}`),
-  unlock: (id, familyKey) => api.post(`/letters/${id}/unlock`, { familyKey }),
+  getAll: () => api.get('/api/letters'),
+  create: (letterData) => api.post('/api/letters', letterData),
+  update: (id, letterData) => api.put(`/api/letters/${id}`, letterData),
+  delete: (id) => api.delete(`/api/letters/${id}`),
+  unlock: (id, familyKey) => api.post(`/api/letters/${id}/unlock`, { familyKey })
 };
 
 export default api; 

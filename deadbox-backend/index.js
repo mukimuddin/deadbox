@@ -22,25 +22,24 @@ const { checkInactivity, checkScheduledDeliveries } = require("./services/trigge
 
 const app = express();
 
-// Basic middleware
+// Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// CORS must be before other middleware
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
-
-// Security middleware
-setupSecurity(app);
-setupPerformance(app);
-app.use(sanitizeInput);
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL 
+    : ['http://localhost:5173', 'http://localhost:3000'],
+  credentials: true
+}));
 
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/letters", letterRoutes);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running' });
+});
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI, {
