@@ -11,6 +11,7 @@ import CreateLetter from './components/CreateLetter';
 import HomePage from './components/HomePage';
 import VerifyEmail from './components/auth/VerifyEmail';
 import ResendVerification from './components/auth/ResendVerification';
+import Navbar from './components/Navbar';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -27,35 +28,45 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-function App() {
+const PrivateRoute = ({ children }) => {
+  const isAuthenticated = localStorage.getItem('token');
+  return isAuthenticated ? children : <Navigate to="/login" />;
+};
+
+const App = () => {
   return (
     <AuthProvider>
       <Router>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/create-letter" 
-            element={
-              <ProtectedRoute>
-                <CreateLetter />
-              </ProtectedRoute>
-            } 
-          />
-          <Route path="/verify-email/:token" element={<VerifyEmail />} />
-          <Route path="/resend-verification" element={<ResendVerification />} />
-        </Routes>
+        <div className="app">
+          <Navbar />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/create-letter" 
+                element={
+                  <ProtectedRoute>
+                    <CreateLetter />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="/verify-email/:token" element={<VerifyEmail />} />
+              <Route path="/resend-verification" element={<ResendVerification />} />
+            </Routes>
+          </main>
+        </div>
       </Router>
     </AuthProvider>
   )
