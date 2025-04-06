@@ -12,9 +12,11 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const { setupSecurity, corsOptions } = require("./middleware/security");
-const { setupPerformance, setupIndexes } = require("./middleware/performance");
-const { sanitizeInput } = require("./middleware/validation");
+const { corsOptions } = require("./middleware/security");
+const { errorHandler } = require('./middleware/errorHandler');
+const { rateLimiter } = require('./middleware/rateLimiter');
+const { validateInput } = require('./middleware/validation');
+const { xssProtection } = require('./middleware/security');
 const userRoutes = require("./routes/userRoutes");
 const letterRoutes = require("./routes/letters");
 const authRoutes = require("./routes/auth");
@@ -23,25 +25,23 @@ const { cleanupUnverifiedAccounts } = require('./services/cleanupService');
 
 const app = express();
 
-// Log environment and configuration
-console.log('Current environment:', process.env.NODE_ENV);
-console.log('Frontend URL:', process.env.FRONTEND_URL);
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Apply CORS middleware first
+// Enable CORS with options
 app.use(cors(corsOptions));
 
 // Handle preflight requests
 app.options('*', cors(corsOptions));
 
-// Apply security middleware
-setupSecurity(app);
+// Parse JSON payloads
+app.use(express.json());
 
-// Apply performance middleware
-setupPerformance(app);
+// Security middleware
+app.use(xssProtection);
+app.use(rateLimiter);
+app.use(validateInput);
+
+// Log environment and frontend URL
+console.log('Environment:', process.env.NODE_ENV);
+console.log('Frontend URL:', process.env.FRONTEND_URL);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -50,7 +50,7 @@ app.use('/api/letters', letterRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Server is running' });
+  res.status(200).json({ status: 'ok' });
 });
 
 // Schedule cleanup of unverified accounts
@@ -60,41 +60,32 @@ setInterval(cleanupUnverifiedAccounts, 24 * 60 * 60 * 1000);
 // Run cleanup on server start
 cleanupUnverifiedAccounts();
 
-// Database connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 30000,
-  socketTimeoutMS: 45000,
-  maxPoolSize: 10,
-  retryWrites: true,
-  retryReads: true,
-  w: 'majority'
-})
-.then(() => {
-  console.log("Connected to MongoDB");
-  // Setup database indexes
-  setupIndexes();
-})
-.catch(err => {
-  console.error("MongoDB connection error:", err);
-  setTimeout(() => {
-    console.log("Retrying MongoDB connection...");
-    mongoose.connect(process.env.MONGODB_URI);
-  }, 5000);
-});
+// Error handling middleware
+app.use(errorHandler);
 
-// Handle MongoDB disconnection events
-mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB disconnected! Attempting to reconnect...');
-  setTimeout(() => {
-    mongoose.connect(process.env.MONGODB_URI);
-  }, 5000);
-});
+// MongoDB connection with retry logic
+const connectDB = async (retries = 5) => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    console.log('MongoDB connected successfully');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    if (retries > 0) {
+      console.log(`Retrying connection... (${retries} attempts remaining)`);
+      setTimeout(() => connectDB(retries - 1), 5000);
+    } else {
+      console.error('Failed to connect to MongoDB after multiple attempts');
+      process.exit(1);
+    }
+  }
+};
 
-mongoose.connection.on('error', (err) => {
-  console.error('MongoDB error:', err);
-});
+connectDB();
 
 // Background jobs
 setInterval(async () => {
@@ -102,64 +93,14 @@ setInterval(async () => {
   await checkScheduledDeliveries();
 }, 24 * 60 * 60 * 1000); // Run every 24 hours
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error details:', {
-    message: err.message,
-    stack: err.stack,
-    path: req.path,
-    method: req.method
-  });
-
-  // Handle specific types of errors
-  if (err.name === 'ValidationError') {
-    return res.status(400).json({
-      error: 'Validation Error',
-      details: err.message
-    });
-  }
-
-  if (err.name === 'MongoError' || err.name === 'MongoServerError') {
-    return res.status(503).json({
-      error: 'Database Error',
-      message: 'A database error occurred. Please try again later.'
-    });
-  }
-
-  if (err.name === 'JsonWebTokenError') {
-    return res.status(401).json({
-      error: 'Authentication Error',
-      message: 'Invalid or expired token'
-    });
-  }
-
-  // Default error response
-  res.status(err.status || 500).json({
-    error: 'Server Error',
-    message: process.env.NODE_ENV === 'production' 
-      ? 'An unexpected error occurred'
-      : err.message
-  });
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-  // Give the server time to finish current requests
-  setTimeout(() => {
-    process.exit(1);
-  }, 1000);
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 // Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  // Don't exit the process, just log the error
-});
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Promise Rejection:', err);
 });
 
 module.exports = app;

@@ -11,27 +11,48 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later'
 });
 
-// CORS configuration
+const allowedOrigins = {
+  production: [
+    'https://deadbox.vercel.app',
+    'https://www.deadbox.vercel.app',
+    'https://deadbox.onrender.com'
+  ],
+  development: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:3000'
+  ]
+};
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? ['https://deadbox.vercel.app', 'https://www.deadbox.vercel.app', 'https://deadbox.onrender.com']
-    : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  origin: function (origin, callback) {
+    const origins = process.env.NODE_ENV === 'production' 
+      ? allowedOrigins.production 
+      : allowedOrigins.development;
+
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (origins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
     'Content-Type',
     'Authorization',
-    'Accept',
-    'Origin',
     'X-Requested-With',
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Headers',
-    'Access-Control-Allow-Methods'
+    'Accept',
+    'Origin'
   ],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 600, // 10 minutes
+  credentials: true,
   preflightContinue: false,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
+  maxAge: 3600 // 1 hour
 };
 
 // Input validation middleware
@@ -94,9 +115,12 @@ const setupSecurity = (app) => {
   app.use(limiter);
 };
 
+const xssProtection = xss();
+
 module.exports = {
   limiter,
   corsOptions,
   validateLetterInput,
-  setupSecurity
+  setupSecurity,
+  xssProtection
 }; 

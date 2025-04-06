@@ -79,14 +79,32 @@ const sanitizeInput = (req, res, next) => {
 };
 
 // Validate input against rules
-const validateInput = async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ 
-      error: 'Validation failed',
-      details: errors.array().map(err => err.msg)
+const validateInput = (req, res, next) => {
+  // Skip validation for GET requests and health check endpoint
+  if (req.method === 'GET' || req.path === '/health') {
+    return next();
+  }
+
+  const contentType = req.headers['content-type'];
+  
+  // Ensure content type is application/json for POST, PUT, PATCH requests
+  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    if (!contentType || !contentType.includes('application/json')) {
+      return res.status(415).json({
+        error: 'Unsupported Media Type',
+        message: 'Content-Type must be application/json'
+      });
+    }
+  }
+
+  // Validate request body is not empty when required
+  if (['POST', 'PUT', 'PATCH'].includes(req.method) && !Object.keys(req.body).length) {
+    return res.status(400).json({
+      error: 'Bad Request',
+      message: 'Request body cannot be empty'
     });
   }
+
   next();
 };
 
