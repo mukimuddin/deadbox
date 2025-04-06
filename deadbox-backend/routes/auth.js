@@ -12,7 +12,36 @@ const emailValidator = require('deep-email-validator');
 // Function to validate email
 async function isEmailValid(email) {
   try {
-    const { valid, reason, validators } = await emailValidator.validate(email);
+    const { valid, reason, validators } = await emailValidator.validate(email, {
+      validateRegex: true,
+      validateMx: true,
+      validateTypo: true,
+      validateDisposable: true,
+      validateSMTP: false // SMTP validation can be slow and sometimes unreliable
+    });
+
+    // Log validation details for debugging
+    console.log('Email validation result:', {
+      email,
+      valid,
+      reason,
+      validators
+    });
+
+    // Check for specific validation failures
+    if (!validators.regex.valid) {
+      return { valid: false, reason: 'Invalid email format' };
+    }
+    if (!validators.typo.valid) {
+      return { valid: false, reason: 'Possible typo in email domain' };
+    }
+    if (!validators.disposable.valid) {
+      return { valid: false, reason: 'Disposable email addresses are not allowed' };
+    }
+    if (!validators.mx.valid) {
+      return { valid: false, reason: 'Invalid email domain' };
+    }
+
     return {
       valid,
       reason,
