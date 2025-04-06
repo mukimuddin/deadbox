@@ -7,14 +7,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: clamp(1.5rem, 4vw, 3rem);
+  margin-bottom: clamp(2rem, 5vw, 3rem);
   flex-wrap: wrap;
   gap: 1rem;
 }
 
 .dashboard-header h1 {
   font-size: clamp(1.5rem, 4vw, 2.5rem);
-  color: var(--white);
   margin: 0;
   background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%);
   -webkit-background-clip: text;
@@ -22,7 +21,7 @@
 }
 
 .create-button {
-  background: #4f46e5;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: white;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
@@ -33,9 +32,8 @@
 }
 
 .create-button:hover {
-  background: #4338ca;
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
 }
 
 .letters-grid {
@@ -46,27 +44,23 @@
 }
 
 .letter-card {
-  background: var(--card-bg);
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .letter-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
-}
-
-.letter-content {
-  padding: clamp(1rem, 3vw, 1.5rem);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
 }
 
 .letter-content h3 {
   font-size: clamp(1.1rem, 2.5vw, 1.25rem);
   color: var(--white);
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 1rem 0;
 }
 
 .letter-preview {
@@ -112,8 +106,8 @@
 .letter-actions {
   display: flex;
   gap: 0.5rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.02);
+  margin-top: 1rem;
+  padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -149,16 +143,15 @@
   grid-column: 1 / -1;
   text-align: center;
   padding: clamp(2rem, 5vw, 4rem);
-  background: var(--card-bg);
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .no-letters h2 {
   font-size: clamp(1.25rem, 3vw, 1.875rem);
   color: var(--white);
   margin-bottom: 1rem;
+  background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .no-letters p {

@@ -4,7 +4,6 @@
   --secondary: #1f2937;
   --accent: #8b5cf6;
   --background: #0f172a;
-  --card-bg: #1e293b;
   --text: #e2e8f0;
   --text-light: #94a3b8;
   --white: #ffffff;
@@ -80,21 +79,20 @@ body {
 
 /* Form Styles */
 .form-container {
-  background: var(--card-bg);
-  padding: clamp(1.5rem, 5vw, 2.5rem);
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 500px;
-  margin: 0 auto;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 2rem auto;
+  padding: 0 1rem;
 }
 
 .form-title {
   font-size: clamp(1.5rem, 4vw, 2rem);
   color: var(--white);
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   text-align: center;
+  background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .form-group {
