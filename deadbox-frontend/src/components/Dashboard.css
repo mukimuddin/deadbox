@@ -1,6 +1,7 @@
 .dashboard-container {
   min-height: 100vh;
   padding: clamp(1rem, 3vw, 2rem);
+  background: transparent;
 }
 
 .dashboard-header {

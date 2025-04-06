@@ -23,7 +23,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--background);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: var(--text);
   min-height: 100vh;
 }
@@ -32,7 +32,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--background);
+  background: transparent;
 }
 
 .main-content {
@@ -83,6 +83,7 @@ body {
   max-width: 500px;
   margin: 2rem auto;
   padding: 0 1rem;
+  background: transparent;
 }
 
 .form-title {
