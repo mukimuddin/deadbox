@@ -14,6 +14,15 @@ const api = axios.create({
 // Add a request interceptor
 api.interceptors.request.use(
   (config) => {
+    // Log the request (excluding sensitive data)
+    console.log('API Request:', {
+      url: config.url,
+      method: config.method,
+      headers: config.headers,
+      data: config.data ? { ...config.data, password: '[REDACTED]' } : undefined
+    });
+
+    // Ensure headers are set
     config.headers = {
       ...config.headers,
       'Content-Type': 'application/json',
@@ -27,14 +36,31 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
 
 // Add a response interceptor
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Log the response (excluding sensitive data)
+    console.log('API Response:', {
+      url: response.config.url,
+      status: response.status,
+      data: response.data
+    });
+    return response;
+  },
   (error) => {
+    // Log the error details
+    console.error('API Error:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       window.location.href = '/login';
@@ -44,7 +70,15 @@ api.interceptors.response.use(
 );
 
 export const auth = {
-  login: (email, password) => api.post('/auth/login', { email, password }),
+  login: async (email, password) => {
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      return response;
+    } catch (error) {
+      console.error('Login error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
   register: (userData) => api.post('/auth/register', userData),
   getProfile: () => api.get('/users/profile'),
   updateProfile: (userData) => api.patch('/users/profile', userData),

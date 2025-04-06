@@ -27,10 +27,16 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      console.log('Attempting login with email:', email);
       await login(email, password);
+      toast.success('Successfully logged in!');
       navigate('/');
     } catch (error) {
       console.error('Login error:', error);
+      const errorMessage = error.response?.data?.message || 
+                         error.response?.data?.error || 
+                         'Failed to login. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -40,7 +46,7 @@ const Login = () => {
     <div className="auth-container">
       <div className="auth-box">
         <h2>Sign in to your account</h2>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
             <label htmlFor="email">Email address</label>
             <input
@@ -50,7 +56,7 @@ const Login = () => {
               autoComplete="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.trim())}
               placeholder="Enter your email"
               disabled={isLoading}
             />
@@ -71,7 +77,11 @@ const Login = () => {
             />
           </div>
 
-          <button type="submit" disabled={isLoading} className="auth-button">
+          <button 
+            type="submit" 
+            disabled={isLoading || !email || !password} 
+            className="auth-button"
+          >
             {isLoading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
