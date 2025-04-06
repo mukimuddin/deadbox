@@ -1,52 +1,90 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { letters } from '../services/api';
+import './Dashboard.css';
 
 const Dashboard = () => {
-  const [letters, setLetters] = useState([]); // Will be populated from API
+  const [userLetters, setUserLetters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchLetters = async () => {
+      try {
+        const response = await letters.getAll();
+        setUserLetters(response.data);
+      } catch (err) {
+        setError('Failed to load your letters. Please try again later.');
+        console.error('Error fetching letters:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLetters();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="dashboard-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading your letters...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Your Letters</h1>
-            <Link
-              to="/create"
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-            >
-              Create New Letter
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h1>Your Letters</h1>
+        <Link to="/create-letter" className="create-button">
+          Create New Letter
+        </Link>
+      </div>
+
+      {error && (
+        <div className="error-message">
+          {error}
+        </div>
+      )}
+
+      <div className="letters-grid">
+        {userLetters.length === 0 ? (
+          <div className="no-letters">
+            <h2>No Letters Yet</h2>
+            <p>Start by creating your first letter to your loved ones.</p>
+            <Link to="/create-letter" className="create-button">
+              Create Your First Letter
             </Link>
           </div>
-
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
-            <ul className="divide-y divide-gray-200">
-              {letters.length === 0 ? (
-                <li className="px-4 py-4">
-                  <p className="text-gray-500 text-center">No letters found. Create your first letter to get started.</p>
-                </li>
-              ) : (
-                letters.map((letter) => (
-                  <li key={letter._id} className="px-4 py-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-indigo-600 truncate">{letter.title}</p>
-                        <p className="text-sm text-gray-500">Scheduled for: {letter.scheduledDate}</p>
-                      </div>
-                      <div className="ml-4 flex-shrink-0">
-                        <button
-                          type="button"
-                          className="font-medium text-indigo-600 hover:text-indigo-500"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
-        </div>
+        ) : (
+          userLetters.map(letter => (
+            <div key={letter._id} className="letter-card">
+              <div className="letter-content">
+                <h3>{letter.title}</h3>
+                <p className="letter-preview">
+                  {letter.message.length > 100
+                    ? `${letter.message.substring(0, 100)}...`
+                    : letter.message}
+                </p>
+                <div className="letter-meta">
+                  <span className="letter-date">
+                    {letter.triggerType === 'date'
+                      ? `Scheduled: ${new Date(letter.scheduledDate).toLocaleDateString()}`
+                      : `Inactivity: ${letter.inactivityDays} days`}
+                  </span>
+                  <span className={`letter-status ${letter.isSent ? 'sent' : 'pending'}`}>
+                    {letter.isSent ? 'Sent' : 'Pending'}
+                  </span>
+                </div>
+              </div>
+              <div className="letter-actions">
+                <button className="edit-button">Edit</button>
+                <button className="delete-button">Delete</button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

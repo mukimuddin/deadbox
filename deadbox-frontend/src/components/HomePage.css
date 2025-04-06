@@ -5,17 +5,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 1rem;
 }
 
 .home-content {
   max-width: 1200px;
+  width: 100%;
   text-align: center;
-  padding: 2rem;
+  padding: 2rem 1rem;
 }
 
 h1 {
-  font-size: 3.5rem;
+  font-size: clamp(2rem, 5vw, 3.5rem);
   margin-bottom: 1rem;
   background: linear-gradient(45deg, #00c6ff, #0072ff);
   -webkit-background-clip: text;
@@ -24,14 +25,14 @@ h1 {
 }
 
 .tagline {
-  font-size: 1.5rem;
+  font-size: clamp(1rem, 3vw, 1.5rem);
   color: #a0aec0;
   margin-bottom: 3rem;
 }
 
 .features {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2rem;
   margin: 3rem 0;
 }
@@ -41,21 +42,24 @@ h1 {
   padding: 2rem;
   border-radius: 1rem;
   backdrop-filter: blur(10px);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .feature-item:hover {
   transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
 .feature-item h3 {
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
   margin-bottom: 1rem;
   color: #00c6ff;
 }
 
 .feature-item p {
   color: #a0aec0;
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
+  line-height: 1.6;
 }
 
 .auth-buttons {
@@ -63,15 +67,18 @@ h1 {
   gap: 1rem;
   justify-content: center;
   margin-top: 2rem;
+  flex-wrap: wrap;
+  padding: 0 1rem;
 }
 
 .btn {
-  padding: 1rem 2rem;
+  padding: 0.875rem 1.5rem;
   border-radius: 0.5rem;
-  font-size: 1.1rem;
+  font-size: clamp(0.875rem, 1.5vw, 1.1rem);
   font-weight: bold;
   text-decoration: none;
   transition: all 0.3s ease;
+  min-width: 120px;
 }
 
 .btn-primary {
@@ -93,35 +100,59 @@ h1 {
 @keyframes glow {
   from {
     text-shadow: 0 0 10px rgba(0, 198, 255, 0.5),
-                 0 0 20px rgba(0, 198, 255, 0.3),
-                 0 0 30px rgba(0, 198, 255, 0.2);
+                 0 0 20px rgba(0, 198, 255, 0.3);
   }
   to {
-    text-shadow: 0 0 20px rgba(0, 198, 255, 0.6),
-                 0 0 30px rgba(0, 198, 255, 0.4),
-                 0 0 40px rgba(0, 198, 255, 0.3);
+    text-shadow: 0 0 20px rgba(0, 198, 255, 0.7),
+                 0 0 30px rgba(0, 198, 255, 0.5);
   }
 }
 
-@media (max-width: 768px) {
-  h1 {
-    font-size: 2.5rem;
-  }
-
-  .tagline {
-    font-size: 1.2rem;
+/* Mobile Responsiveness */
+@media screen and (max-width: 768px) {
+  .home-content {
+    padding: 1rem;
   }
 
   .features {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .feature-item {
+    padding: 1.5rem;
   }
 
   .auth-buttons {
     flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 300px;
+    margin: 2rem auto 0;
   }
 
   .btn {
     width: 100%;
     text-align: center;
+  }
+}
+
+/* Small screens */
+@media screen and (max-width: 480px) {
+  .home-container {
+    padding: 0.5rem;
+  }
+
+  h1 {
+    margin-bottom: 0.5rem;
+  }
+
+  .tagline {
+    margin-bottom: 2rem;
+  }
+
+  .feature-item {
+    padding: 1.25rem;
   }
 } 

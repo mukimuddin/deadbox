@@ -3,15 +3,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
+  padding: clamp(1rem, 3vw, 2rem);
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
 }
 
 .auth-box {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  border-radius: 15px;
-  padding: 40px;
+  border-radius: clamp(0.75rem, 2vw, 1rem);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
   width: 100%;
   max-width: 500px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -20,31 +20,32 @@
 .auth-box h2 {
   color: #fff;
   text-align: center;
-  margin-bottom: 30px;
-  font-size: 2rem;
+  margin-bottom: clamp(1.5rem, 4vw, 2rem);
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 600;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
 }
 
 .form-group label {
   display: block;
   color: #fff;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  font-size: clamp(0.875rem, 2vw, 1rem);
 }
 
 .form-group input[type="text"],
 .form-group input[type="email"],
 .form-group input[type="password"] {
   width: 100%;
-  padding: 12px;
+  padding: clamp(0.75rem, 2vw, 1rem);
   border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  border-radius: 0.5rem;
   background: rgba(255, 255, 255, 0.05);
   color: #fff;
-  font-size: 1rem;
+  font-size: clamp(0.875rem, 2vw, 1rem);
   transition: all 0.3s ease;
 }
 
@@ -52,6 +53,7 @@
   outline: none;
   border-color: #4a90e2;
   background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
 }
 
 .form-group input.error {
@@ -61,46 +63,53 @@
 
 .error-message {
   color: #ff4d4d;
-  font-size: 0.85rem;
-  margin-top: 5px;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  margin-top: 0.5rem;
   display: block;
 }
 
 .general-error {
   background: rgba(255, 77, 77, 0.1);
   border: 1px solid #ff4d4d;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 20px;
+  border-radius: 0.5rem;
+  padding: clamp(0.75rem, 2vw, 1rem);
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
   text-align: center;
+  font-size: clamp(0.875rem, 2vw, 1rem);
 }
 
 .checkbox-group {
   display: flex;
   align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
 }
 
 .checkbox-group label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   cursor: pointer;
+  margin: 0;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  line-height: 1.4;
 }
 
 .checkbox-group input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: clamp(1rem, 2.5vw, 1.25rem);
+  height: clamp(1rem, 2.5vw, 1.25rem);
   margin: 0;
+  cursor: pointer;
 }
 
 button {
   width: 100%;
-  padding: 14px;
+  padding: clamp(0.75rem, 2vw, 1rem);
   background: #4a90e2;
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: 0.5rem;
+  font-size: clamp(0.875rem, 2vw, 1rem);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -108,27 +117,71 @@ button {
 
 button:hover {
   background: #357abd;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
 }
 
 button:disabled {
   background: #ccc;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .auth-footer {
-  margin-top: 20px;
+  margin-top: clamp(1.5rem, 4vw, 2rem);
   text-align: center;
   color: #fff;
+}
+
+.auth-footer p {
+  margin: 0.5rem 0;
+  font-size: clamp(0.875rem, 2vw, 1rem);
 }
 
 .auth-footer a {
   color: #4a90e2;
   text-decoration: none;
   font-weight: 600;
+  transition: color 0.3s ease;
 }
 
 .auth-footer a:hover {
+  color: #357abd;
   text-decoration: underline;
+}
+
+.success-message {
+  color: #48bb78;
+  background: rgba(72, 187, 120, 0.1);
+  border: 1px solid #48bb78;
+  border-radius: 0.5rem;
+  padding: clamp(0.75rem, 2vw, 1rem);
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
+  text-align: center;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.verification-status {
+  text-align: center;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  margin: clamp(1rem, 3vw, 1.5rem) 0;
+  border-radius: 0.5rem;
+}
+
+.verification-status.success {
+  background: rgba(72, 187, 120, 0.1);
+  color: #48bb78;
+}
+
+.verification-status.error {
+  background: rgba(255, 77, 77, 0.1);
+  color: #ff4d4d;
+}
+
+.verification-status p {
+  margin: 0.5rem 0;
+  font-size: clamp(0.875rem, 2vw, 1rem);
 }
 
 @keyframes shake {
@@ -137,66 +190,42 @@ button:disabled {
   75% { transform: translateX(5px); }
 }
 
-.success-message {
-  color: #4CAF50;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
+/* Mobile Responsiveness */
+@media screen and (max-width: 480px) {
+  .auth-box {
+    margin: 1rem;
+    padding: 1.25rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .checkbox-group {
+    margin-bottom: 1rem;
+  }
+
+  .auth-footer {
+    margin-top: 1.5rem;
+  }
+
+  .verification-status {
+    margin: 1rem 0;
+    padding: 1rem;
+  }
 }
 
-.submit-error {
-  text-align: center;
-  margin: 1rem 0;
-}
+/* Dark mode enhancements */
+@media (prefers-color-scheme: dark) {
+  .auth-box {
+    background: rgba(0, 0, 0, 0.2);
+  }
 
-.form-group.checkbox {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+  .form-group input {
+    background: rgba(0, 0, 0, 0.2);
+  }
 
-.form-group.checkbox input[type="checkbox"] {
-  width: auto;
-}
-
-.form-group.checkbox label {
-  margin-bottom: 0;
-}
-
-.verification-status {
-  text-align: center;
-  padding: 1rem;
-  margin: 1rem 0;
-  border-radius: 4px;
-}
-
-.verification-status.success {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-}
-
-.verification-status.error {
-  background-color: #ffebee;
-  color: #c62828;
-}
-
-.verification-status p {
-  margin: 0.5rem 0;
-}
-
-.auth-links {
-  margin-top: 1rem;
-  text-align: center;
-}
-
-.auth-links button {
-  background: none;
-  border: none;
-  color: #2196f3;
-  cursor: pointer;
-  font-size: 0.875rem;
-  padding: 0.5rem;
-}
-
-.auth-links button:hover {
-  text-decoration: underline;
+  .form-group input:focus {
+    background: rgba(0, 0, 0, 0.3);
+  }
 } 
