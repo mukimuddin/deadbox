@@ -1,7 +1,16 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth } from '../services/api';
+import { toast } from 'react-hot-toast';
 
 const AuthContext = createContext(null);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -16,6 +25,7 @@ export const AuthProvider = ({ children }) => {
         })
         .catch(() => {
           localStorage.removeItem('token');
+          setUser(null);
         })
         .finally(() => {
           setLoading(false);
@@ -26,50 +36,48 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const response = await auth.login(email, password);
-    const { token, user } = response.data;
-    localStorage.setItem('token', token);
-    setUser(user);
-    return user;
-  };
-
-  const register = async (userData) => {
-    const response = await auth.register(userData);
-    const { token, user } = response.data;
-    localStorage.setItem('token', token);
-    setUser(user);
-    return user;
+    try {
+      const response = await auth.login(email, password);
+      localStorage.setItem('token', response.data.token);
+      setUser(response.data.user);
+      toast.success('Successfully logged in!');
+      return response.data;
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Login failed');
+      throw error;
+    }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
+    toast.success('Successfully logged out');
   };
 
-  const updateProfile = async (userData) => {
-    const response = await auth.updateProfile(userData);
-    setUser(response.data);
-    return response.data;
+  const register = async (userData) => {
+    try {
+      const response = await auth.register(userData);
+      toast.success('Registration successful! Please verify your email.');
+      return response.data;
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Registration failed');
+      throw error;
+    }
+  };
+
+  const value = {
+    user,
+    loading,
+    login,
+    logout,
+    register
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      login,
-      register,
-      logout,
-      updateProfile
-    }}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}; 
+export default AuthContext; 

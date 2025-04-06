@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-hot-toast';
 import './Auth.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -16,24 +15,22 @@ const Login = () => {
   useEffect(() => {
     if (location.state?.message) {
       if (location.state.type === 'success') {
-        setSuccess(location.state.message);
+        toast.success(location.state.message);
       } else {
-        setError(location.state.message);
+        toast.error(location.state.message);
       }
     }
   }, [location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     setIsLoading(true);
 
     try {
       await login(email, password);
-      navigate('/dashboard');
+      navigate('/');
     } catch (error) {
-      setError(error.response?.data?.error || 'Login failed. Please try again.');
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -54,7 +51,8 @@ const Login = () => {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={error ? 'error' : ''}
+              placeholder="Enter your email"
+              disabled={isLoading}
             />
           </div>
 
@@ -68,21 +66,19 @@ const Login = () => {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={error ? 'error' : ''}
+              placeholder="Enter your password"
+              disabled={isLoading}
             />
           </div>
 
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
-
-          <button type="submit" disabled={isLoading}>
+          <button type="submit" disabled={isLoading} className="auth-button">
             {isLoading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
 
         <div className="auth-footer">
-          <p>Don't have an account? <a href="/signup">Sign up</a></p>
-          <p><a href="/forgot-password">Forgot your password?</a></p>
+          <p>Don't have an account? <Link to="/signup">Sign up</Link></p>
+          <p><Link to="/forgot-password">Forgot your password?</Link></p>
         </div>
       </div>
     </div>
