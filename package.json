@@ -1,11 +1,16 @@
 {
   "name": "deadbox",
   "version": "1.0.0",
-  "private": true,
+  "description": "",
+  "main": "index.js",
   "scripts": {
+    "install": "cd deadbox-backend && npm install",
     "start": "cd deadbox-backend && npm install && npm start",
-    "install": "cd deadbox-backend && npm install"
+    "build": "cd deadbox-backend && npm install && cd ../deadbox-frontend && npm install"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "engines": {
     "node": "18.x"
   },
