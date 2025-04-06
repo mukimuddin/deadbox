@@ -11,6 +11,7 @@ const transporter = nodemailer.createTransport({
 
 const sendVerificationEmail = async (email, token) => {
   const verificationLink = `${config.FRONTEND_URL}/verify-email/${token}`;
+  console.log('Sending verification email with link:', verificationLink);
 
   const mailOptions = {
     from: config.EMAIL_USER,
@@ -26,10 +27,12 @@ const sendVerificationEmail = async (email, token) => {
   };
 
   await transporter.sendMail(mailOptions);
+  console.log('Verification email sent successfully to:', email);
 };
 
 const sendPasswordResetEmail = async (email, token) => {
   const resetLink = `${config.FRONTEND_URL}/reset-password/${token}`;
+  console.log('Sending password reset email with link:', resetLink);
 
   const mailOptions = {
     from: config.EMAIL_USER,
@@ -45,6 +48,7 @@ const sendPasswordResetEmail = async (email, token) => {
   };
 
   await transporter.sendMail(mailOptions);
+  console.log('Password reset email sent successfully to:', email);
 };
 
 module.exports = {
