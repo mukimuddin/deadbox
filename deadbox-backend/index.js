@@ -13,9 +13,9 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const { corsOptions } = require("./middleware/security");
-const { errorHandler } = require('./middleware/errorHandler');
+const errorHandler = require('./middleware/errorHandler');
 const { rateLimiter } = require('./middleware/rateLimiter');
-const { validateInput } = require('./middleware/validation');
+const { validateInput, sanitizeInput } = require('./middleware/validation');
 const { xssProtection } = require('./middleware/security');
 const userRoutes = require("./routes/userRoutes");
 const letterRoutes = require("./routes/letters");
@@ -37,6 +37,7 @@ app.use(express.json());
 // Security middleware
 app.use(xssProtection);
 app.use(rateLimiter);
+app.use(sanitizeInput);
 app.use(validateInput);
 
 // Log environment and frontend URL
@@ -47,6 +48,7 @@ console.log('Frontend URL:', process.env.FRONTEND_URL);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/letters', letterRoutes);
+app.use('/api/triggers', require('./routes/triggerRoutes'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
