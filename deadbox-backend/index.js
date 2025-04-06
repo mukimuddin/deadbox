@@ -34,9 +34,9 @@ app.use(cors({
 }));
 
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/letters", letterRoutes);
+app.use("/auth", authRoutes);
+app.use("/users", userRoutes);
+app.use("/letters", letterRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

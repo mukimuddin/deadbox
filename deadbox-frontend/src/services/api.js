@@ -36,25 +36,25 @@ api.interceptors.response.use(
 );
 
 export const auth = {
-  login: (email, password) => api.post('/api/auth/login', { email, password }),
-  register: (userData) => api.post('/api/auth/register', userData),
-  getProfile: () => api.get('/api/users/profile'),
-  updateProfile: (userData) => api.patch('/api/users/profile', userData),
-  forgotPassword: (email) => api.post('/api/auth/forgot-password', { email }),
-  resetPassword: (token, password) => api.post(`/api/auth/reset-password/${token}`, { 
+  login: (email, password) => api.post('/auth/login', { email, password }),
+  register: (userData) => api.post('/auth/register', userData),
+  getProfile: () => api.get('/users/profile'),
+  updateProfile: (userData) => api.patch('/users/profile', userData),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { 
     password,
     confirmPassword: password
   }),
-  verifyEmail: (token) => api.get(`/api/auth/verify-email/${token}`),
-  resendVerification: (email) => api.post('/api/auth/resend-verification', { email })
+  verifyEmail: (token) => api.get(`/auth/verify-email/${token}`),
+  resendVerification: (email) => api.post('/auth/resend-verification', { email })
 };
 
 export const letters = {
-  getAll: () => api.get('/api/letters'),
-  create: (letterData) => api.post('/api/letters', letterData),
-  update: (id, letterData) => api.put(`/api/letters/${id}`, letterData),
-  delete: (id) => api.delete(`/api/letters/${id}`),
-  unlock: (id, familyKey) => api.post(`/api/letters/${id}/unlock`, { familyKey })
+  getAll: () => api.get('/letters'),
+  create: (letterData) => api.post('/letters', letterData),
+  update: (id, letterData) => api.put(`/letters/${id}`, letterData),
+  delete: (id) => api.delete(`/letters/${id}`),
+  unlock: (id, familyKey) => api.post(`/letters/${id}/unlock`, { familyKey })
 };
 
 export default api; 
