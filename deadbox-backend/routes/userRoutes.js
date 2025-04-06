@@ -5,57 +5,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const auth = require('../middleware/auth');
 
-// Register new user
-router.post("/register", async (req, res) => {
-  try {
-    const { email, password, name, familyEmail } = req.body;
-    
-    // Generate a random family key
-    const familyKey = Math.random().toString(36).substring(2, 15);
-    
-    const user = new User({
-      email,
-      password,
-      name,
-      familyEmail,
-      familyKey
-    });
-
-    await user.save();
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
-    
-    res.status(201).json({ user, token });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Login user
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      throw new Error('Invalid login credentials');
-    }
-
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      throw new Error('Invalid login credentials');
-    }
-
-    // Update last activity
-    user.lastActivity = new Date();
-    await user.save();
-
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
-    res.json({ user, token });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
 // Get user profile
 router.get('/profile', auth, async (req, res) => {
   try {

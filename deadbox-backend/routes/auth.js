@@ -74,6 +74,14 @@ router.post('/register',
           details: Object.values(error.errors).map(err => err.message)
         });
       }
+      if (error.code === 11000) {
+        return res.status(400).json({ error: 'Email already exists' });
+      }
+      if (error.message.includes('Failed to send email')) {
+        console.error('Email sending error:', error);
+        return res.status(500).json({ error: 'Failed to send verification email. Please try again.' });
+      }
+      console.error('Unexpected registration error:', error);
       res.status(500).json({ error: 'Registration failed. Please try again.' });
     }
   }
