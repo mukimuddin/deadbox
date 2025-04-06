@@ -15,9 +15,9 @@ async function isEmailValid(email) {
     const { valid, reason, validators } = await emailValidator.validate(email, {
       validateRegex: true,
       validateMx: true,
-      validateTypo: true,
-      validateDisposable: true,
-      validateSMTP: false // SMTP validation can be slow and sometimes unreliable
+      validateTypo: false, // Disable typo checking as it can be too strict
+      validateDisposable: false, // Disable disposable email check as it can block valid emails
+      validateSMTP: false // SMTP validation can be slow and unreliable
     });
 
     // Log validation details for debugging
@@ -28,28 +28,22 @@ async function isEmailValid(email) {
       validators
     });
 
-    // Check for specific validation failures
+    // Only check basic validation criteria
     if (!validators.regex.valid) {
       return { valid: false, reason: 'Invalid email format' };
-    }
-    if (!validators.typo.valid) {
-      return { valid: false, reason: 'Possible typo in email domain' };
-    }
-    if (!validators.disposable.valid) {
-      return { valid: false, reason: 'Disposable email addresses are not allowed' };
     }
     if (!validators.mx.valid) {
       return { valid: false, reason: 'Invalid email domain' };
     }
 
     return {
-      valid,
-      reason,
-      validators
+      valid: true,
+      reason: 'Email is valid'
     };
   } catch (error) {
     console.error('Email validation error:', error);
-    return { valid: false, reason: 'validation_failed' };
+    // If validation fails, assume email is valid to prevent blocking legitimate users
+    return { valid: true, reason: 'Validation skipped due to error' };
   }
 }
 
