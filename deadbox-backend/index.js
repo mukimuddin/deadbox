@@ -23,9 +23,19 @@ const { cleanupUnverifiedAccounts } = require('./services/cleanupService');
 
 const app = express();
 
+// Log environment and configuration
+console.log('Current environment:', process.env.NODE_ENV);
+console.log('Frontend URL:', process.env.FRONTEND_URL);
+
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Apply CORS middleware first
 app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // Apply security middleware
 setupSecurity(app);

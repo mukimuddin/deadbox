@@ -1,36 +1,34 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { auth } from '../../services/api';
+import { toast } from 'react-hot-toast';
 import './Auth.css';
 
 const ForgotPassword = () => {
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
 
     if (!email) {
-      setError('Email is required');
+      toast.error('Email is required');
       return;
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
-      setError('Please enter a valid email address');
+      toast.error('Please enter a valid email address');
       return;
     }
 
     setIsLoading(true);
     try {
       await auth.forgotPassword(email);
-      setSuccess('Password reset email sent. Please check your inbox.');
+      toast.success('Password reset email sent. Please check your inbox.');
+      setEmail(''); // Clear the form after success
     } catch (error) {
-      setError(error.response?.data?.error || 'Failed to send reset email');
+      console.error('Password reset error:', error);
+      toast.error(error.response?.data?.message || 'Failed to send reset email');
     } finally {
       setIsLoading(false);
     }
@@ -48,19 +46,18 @@ const ForgotPassword = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={error ? 'error' : ''}
+              placeholder="Enter your email"
+              disabled={isLoading}
             />
-            {error && <span className="error-message">{error}</span>}
-            {success && <span className="success-message">{success}</span>}
           </div>
 
-          <button type="submit" disabled={isLoading}>
+          <button type="submit" disabled={isLoading} className="auth-button">
             {isLoading ? 'Sending...' : 'Send Reset Link'}
           </button>
         </form>
 
         <div className="auth-footer">
-          <p>Remember your password? <a href="/login">Login</a></p>
+          <p>Remember your password? <Link to="/login">Login</Link></p>
         </div>
       </div>
     </div>

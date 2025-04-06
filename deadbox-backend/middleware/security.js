@@ -15,12 +15,23 @@ const limiter = rateLimit({
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
     ? ['https://deadbox.vercel.app', 'https://www.deadbox.vercel.app', 'https://deadbox.onrender.com']
-    : ['http://localhost:5173', 'http://localhost:3000'],
+    : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Accept',
+    'Origin',
+    'X-Requested-With',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Headers',
+    'Access-Control-Allow-Methods'
+  ],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 600 // 10 minutes
+  maxAge: 600, // 10 minutes
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
 // Input validation middleware
@@ -57,6 +68,7 @@ const setupSecurity = (app) => {
         connectSrc: ["'self'", 
           "http://localhost:5000", 
           "http://localhost:5173",
+          "http://localhost:5174",
           "https://deadbox.vercel.app",
           "https://www.deadbox.vercel.app",
           "https://deadbox.onrender.com"
