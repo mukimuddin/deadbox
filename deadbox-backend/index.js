@@ -24,20 +24,16 @@ const { cleanupUnverifiedAccounts } = require('./services/cleanupService');
 
 const app = express();
 
-// Enable CORS with options
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
-
-// Parse JSON payloads
+// Basic middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Apply security middleware (includes rate limiting, XSS protection, etc)
+// CORS configuration - must come before routes
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable pre-flight for all routes
+
+// Security middleware
 setupSecurity(app);
-
-// Apply input validation
-app.use(validateInput);
 
 // Log environment and frontend URL
 console.log('Environment:', process.env.NODE_ENV);
@@ -61,7 +57,7 @@ setInterval(cleanupUnverifiedAccounts, 24 * 60 * 60 * 1000);
 // Run cleanup on server start
 cleanupUnverifiedAccounts();
 
-// Error handling middleware
+// Error handling middleware - must be last
 app.use(errorHandler);
 
 // MongoDB connection with retry logic

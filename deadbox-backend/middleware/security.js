@@ -11,37 +11,14 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later'
 });
 
-const allowedOrigins = {
-  production: [
-    'https://deadbox.vercel.app',
-    'https://www.deadbox.vercel.app',
-    'https://deadbox.onrender.com'
-  ],
-  development: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:3000'
-  ]
-};
-
+// CORS configuration
 const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = process.env.NODE_ENV === 'production'
-      ? ['https://deadbox.vercel.app', 'https://www.deadbox.vercel.app', 'https://deadbox.onrender.com']
-      : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'];
-
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  origin: true, // Allow all origins in development
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600, // 10 minutes
   preflightContinue: false,
   optionsSuccessStatus: 204
 };
@@ -71,26 +48,7 @@ const setupSecurity = (app) => {
   app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
     crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https:"],
-        imgSrc: ["'self'", "data:", "https:", "blob:"],
-        connectSrc: ["'self'", 
-          "http://localhost:5000", 
-          "http://localhost:5173",
-          "http://localhost:5174",
-          "https://deadbox.vercel.app",
-          "https://www.deadbox.vercel.app",
-          "https://deadbox.onrender.com"
-        ],
-        fontSrc: ["'self'", "https:", "data:"],
-        objectSrc: ["'none'"],
-        mediaSrc: ["'self'", "https:", "blob:"],
-        frameSrc: ["'self'"]
-      }
-    }
+    contentSecurityPolicy: false // Disable CSP in development
   }));
   
   // Prevent XSS attacks

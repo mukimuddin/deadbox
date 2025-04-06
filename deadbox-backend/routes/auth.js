@@ -8,6 +8,7 @@ const { commonRules, validateInput, sanitizeInput } = require('../middleware/val
 const User = require('../models/User');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/emailService');
 const emailValidator = require('deep-email-validator');
+const { validationResult } = require('express-validator');
 
 // Function to validate email
 async function isEmailValid(email) {
@@ -197,15 +198,23 @@ router.post('/resend-verification',
 
 // Login user
 router.post('/login',
-  sanitizeInput,
   [
-    commonRules.email,
-    commonRules.password
+    body('email').trim().isEmail().withMessage('Please enter a valid email'),
+    body('password').notEmpty().withMessage('Password is required')
   ],
-  validateInput,
   async (req, res) => {
     try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        console.log('Validation errors:', errors.array());
+        return res.status(400).json({ 
+          error: 'Validation Error',
+          details: errors.array()
+        });
+      }
+
       const { email, password } = req.body;
+      console.log('Login attempt for email:', email); // Debug log
 
       // Find user by email
       const user = await User.findOne({ email });
@@ -249,7 +258,8 @@ router.post('/login',
         }
       });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      console.error('Login error:', error);
+      res.status(500).json({ error: 'Login failed. Please try again.' });
     }
   }
 );

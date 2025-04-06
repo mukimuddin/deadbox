@@ -85,18 +85,6 @@ const validateInput = (req, res, next) => {
     return next();
   }
 
-  const contentType = req.headers['content-type'];
-  
-  // Ensure content type is application/json for POST, PUT, PATCH requests
-  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-    if (!contentType || !contentType.includes('application/json')) {
-      return res.status(415).json({
-        error: 'Unsupported Media Type',
-        message: 'Content-Type must be application/json'
-      });
-    }
-  }
-
   // Validate request body is not empty when required
   if (['POST', 'PUT', 'PATCH'].includes(req.method) && !Object.keys(req.body).length) {
     return res.status(400).json({

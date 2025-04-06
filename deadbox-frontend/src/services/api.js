@@ -8,12 +8,18 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  withCredentials: true
+  withCredentials: false
 });
 
 // Add a request interceptor
 api.interceptors.request.use(
   (config) => {
+    config.headers = {
+      ...config.headers,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    };
+    
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
