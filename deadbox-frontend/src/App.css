@@ -3,9 +3,10 @@
   --primary-dark: #4338ca;
   --secondary: #1f2937;
   --accent: #8b5cf6;
-  --background: #f5f7fa;
-  --text: #1f2937;
-  --text-light: #6b7280;
+  --background: #0f172a;
+  --card-bg: #1e293b;
+  --text: #e2e8f0;
+  --text-light: #94a3b8;
   --white: #ffffff;
   --error: #ef4444;
   --success: #10b981;
@@ -32,6 +33,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
 }
 
 .main-content {
@@ -63,33 +65,34 @@ body {
 
 .button-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
 }
 
 .button-secondary {
-  background: var(--white);
+  background: rgba(79, 70, 229, 0.1);
   color: var(--primary);
   border: 2px solid var(--primary);
 }
 
 .button-secondary:hover {
-  background: var(--background);
+  background: rgba(79, 70, 229, 0.2);
 }
 
 /* Form Styles */
 .form-container {
-  background: var(--white);
+  background: var(--card-bg);
   padding: clamp(1.5rem, 5vw, 2.5rem);
   border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 500px;
   margin: 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .form-title {
   font-size: clamp(1.5rem, 4vw, 2rem);
-  color: var(--secondary);
+  color: var(--white);
   margin-bottom: 1.5rem;
   text-align: center;
 }
@@ -108,42 +111,59 @@ body {
 .form-input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
   font-size: 1rem;
   transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
 }
 
 .form-input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+.form-input::placeholder {
+  color: var(--text-light);
 }
 
 /* Message Styles */
 .error-message {
-  background: #fee2e2;
-  color: var(--error);
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
   padding: 1rem;
   border-radius: 0.5rem;
   margin-bottom: 1rem;
   text-align: center;
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .success-message {
-  background: #d1fae5;
-  color: var(--success);
+  background: rgba(16, 185, 129, 0.1);
+  color: #6ee7b7;
   padding: 1rem;
   border-radius: 0.5rem;
   margin-bottom: 1rem;
   text-align: center;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Card Styles */
+.card {
+  background: var(--card-bg);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
 /* Responsive Design */
 @media (max-width: 640px) {
   .form-container {
-    padding: 1rem;
-    border-radius: 0;
-    box-shadow: none;
+    padding: 1.5rem;
+    margin: 1rem;
+    border-radius: 0.5rem;
   }
 }

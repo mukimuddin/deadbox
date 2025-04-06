@@ -1,7 +1,6 @@
 .dashboard-container {
   min-height: 100vh;
   padding: clamp(1rem, 3vw, 2rem);
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
 }
 
 .dashboard-header {
@@ -15,8 +14,11 @@
 
 .dashboard-header h1 {
   font-size: clamp(1.5rem, 4vw, 2.5rem);
-  color: #2d3748;
+  color: var(--white);
   margin: 0;
+  background: linear-gradient(135deg, #4f46e5 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .create-button {
@@ -44,16 +46,17 @@
 }
 
 .letter-card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .letter-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
 }
 
 .letter-content {
@@ -62,12 +65,12 @@
 
 .letter-content h3 {
   font-size: clamp(1.1rem, 2.5vw, 1.25rem);
-  color: #2d3748;
+  color: var(--white);
   margin: 0 0 0.5rem 0;
 }
 
 .letter-preview {
-  color: #4a5568;
+  color: var(--text-light);
   font-size: clamp(0.875rem, 2vw, 1rem);
   line-height: 1.5;
   margin-bottom: 1rem;
@@ -84,7 +87,7 @@
 
 .letter-date {
   font-size: 0.875rem;
-  color: #718096;
+  color: var(--text-light);
 }
 
 .letter-status {
@@ -95,21 +98,23 @@
 }
 
 .letter-status.pending {
-  background: #fef3c7;
-  color: #92400e;
+  background: rgba(251, 191, 36, 0.1);
+  color: #fcd34d;
+  border: 1px solid rgba(251, 191, 36, 0.2);
 }
 
 .letter-status.sent {
-  background: #dcfce7;
-  color: #166534;
+  background: rgba(16, 185, 129, 0.1);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .letter-actions {
   display: flex;
   gap: 0.5rem;
   padding: 1rem;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .letter-actions button {
@@ -123,40 +128,41 @@
 }
 
 .edit-button {
-  background: #e0e7ff;
-  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.1);
+  color: #818cf8;
 }
 
 .edit-button:hover {
-  background: #c7d2fe;
+  background: rgba(79, 70, 229, 0.2);
 }
 
 .delete-button {
-  background: #fee2e2;
-  color: #dc2626;
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
 }
 
 .delete-button:hover {
-  background: #fecaca;
+  background: rgba(239, 68, 68, 0.2);
 }
 
 .no-letters {
   grid-column: 1 / -1;
   text-align: center;
   padding: clamp(2rem, 5vw, 4rem);
-  background: white;
+  background: var(--card-bg);
   border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .no-letters h2 {
   font-size: clamp(1.25rem, 3vw, 1.875rem);
-  color: #2d3748;
+  color: var(--white);
   margin-bottom: 1rem;
 }
 
 .no-letters p {
-  color: #4a5568;
+  color: var(--text-light);
   margin-bottom: 2rem;
   font-size: clamp(0.875rem, 2vw, 1rem);
 }
@@ -168,13 +174,14 @@
   justify-content: center;
   min-height: 100vh;
   gap: 1rem;
+  color: var(--text);
 }
 
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #e2e8f0;
-  border-top-color: #4f46e5;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
