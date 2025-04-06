@@ -108,8 +108,4 @@ const validateInput = (req, res, next) => {
   next();
 };
 
-module.exports = {
-  commonRules,
-  sanitizeInput,
-  validateInput
-}; 
+module.exports = validateInput; 

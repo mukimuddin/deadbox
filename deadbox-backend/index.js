@@ -12,11 +12,10 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const { corsOptions } = require("./middleware/security");
+const helmet = require('helmet');
+const { corsOptions, setupSecurity } = require("./middleware/security");
 const errorHandler = require('./middleware/errorHandler');
-const { rateLimiter } = require('./middleware/rateLimiter');
-const { validateInput, sanitizeInput } = require('./middleware/validation');
-const { xssProtection } = require('./middleware/security');
+const validateInput = require('./middleware/validation');
 const userRoutes = require("./routes/userRoutes");
 const letterRoutes = require("./routes/letters");
 const authRoutes = require("./routes/auth");
@@ -34,10 +33,10 @@ app.options('*', cors(corsOptions));
 // Parse JSON payloads
 app.use(express.json());
 
-// Security middleware
-app.use(xssProtection);
-app.use(rateLimiter);
-app.use(sanitizeInput);
+// Apply security middleware (includes rate limiting, XSS protection, etc)
+setupSecurity(app);
+
+// Apply input validation
 app.use(validateInput);
 
 // Log environment and frontend URL
