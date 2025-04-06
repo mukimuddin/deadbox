@@ -42,13 +42,13 @@ const commonRules = {
     .trim()
     .isLength({ min: 1, max: 200 })
     .withMessage('Title must be between 1 and 200 characters')
-    .customSanitizer(value => sanitizeHtml(value)),
+    .customSanitizer(value => sanitizeHtml(value, sanitizeOptions)),
 
   message: body('message')
     .trim()
     .isLength({ min: 1 })
     .withMessage('Message cannot be empty')
-    .customSanitizer(value => sanitizeHtml(value)),
+    .customSanitizer(value => sanitizeHtml(value, sanitizeOptions)),
 
   triggerType: body('triggerType')
     .trim()
@@ -71,7 +71,7 @@ const sanitizeInput = (req, res, next) => {
   if (req.body) {
     Object.keys(req.body).forEach(key => {
       if (typeof req.body[key] === 'string') {
-        req.body[key] = sanitizeHtml(req.body[key]);
+        req.body[key] = sanitizeHtml(req.body[key], sanitizeOptions);
       }
     });
   }
@@ -105,10 +105,24 @@ const validateInput = (req, res, next) => {
     });
   }
 
+  // Check validation results
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      error: 'Validation Error',
+      details: errors.array().map(err => ({
+        field: err.param,
+        message: err.msg
+      }))
+    });
+  }
+
   next();
 };
 
+// Export middleware functions
 module.exports = {
   validateInput,
-  commonRules
+  commonRules,
+  sanitizeInput
 }; 

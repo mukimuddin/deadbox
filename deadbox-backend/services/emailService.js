@@ -17,6 +17,10 @@ const transporter = nodemailer.createTransport({
 transporter.verify((error, success) => {
   if (error) {
     console.error('SMTP connection error:', error);
+    console.error('Email configuration:', {
+      user: process.env.EMAIL_USER,
+      hasPassword: !!process.env.EMAIL_PASS
+    });
   } else {
     console.log('SMTP server is ready to send emails');
   }
@@ -26,6 +30,10 @@ transporter.verify((error, success) => {
 const sendEmail = async ({ to, subject, html }) => {
   try {
     console.log('Attempting to send email to:', to);
+    console.log('Using email configuration:', {
+      from: process.env.EMAIL_USER,
+      subject
+    });
     
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -39,6 +47,10 @@ const sendEmail = async ({ to, subject, html }) => {
     return true;
   } catch (error) {
     console.error('Email sending error:', error);
+    console.error('Email configuration:', {
+      user: process.env.EMAIL_USER,
+      hasPassword: !!process.env.EMAIL_PASS
+    });
     throw new Error(`Failed to send email: ${error.message}`);
   }
 };

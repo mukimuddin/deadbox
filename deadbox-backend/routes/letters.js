@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
 const { authenticate } = require('../middleware/auth');
-const { commonRules, validateInput } = require('../middleware/validation');
+const { commonRules, validateInput, sanitizeInput } = require('../middleware/validation');
 const Letter = require('../models/Letter');
 const User = require('../models/User');
 
@@ -24,6 +24,7 @@ const upload = multer({
 router.post('/', 
   authenticate,
   upload.single('attachment'),
+  sanitizeInput,
   [
     commonRules.title,
     commonRules.message,
@@ -99,6 +100,7 @@ router.get('/:id',
 router.put('/:id', 
   authenticate,
   upload.single('attachment'),
+  sanitizeInput,
   [
     commonRules.title,
     commonRules.message,

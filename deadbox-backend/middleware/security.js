@@ -26,33 +26,24 @@ const allowedOrigins = {
 
 const corsOptions = {
   origin: function (origin, callback) {
-    const origins = process.env.NODE_ENV === 'production' 
-      ? allowedOrigins.production 
-      : allowedOrigins.development;
+    const allowedOrigins = process.env.NODE_ENV === 'production'
+      ? ['https://deadbox.vercel.app', 'https://www.deadbox.vercel.app', 'https://deadbox.onrender.com']
+      : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'];
 
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) {
-      return callback(null, true);
-    }
+    if (!origin) return callback(null, true);
 
-    if (origins.indexOf(origin) !== -1) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'X-Requested-With',
-    'Accept',
-    'Origin'
-  ],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
   preflightContinue: false,
-  optionsSuccessStatus: 204,
-  maxAge: 3600 // 1 hour
+  optionsSuccessStatus: 204
 };
 
 // Input validation middleware

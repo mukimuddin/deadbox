@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { body } = require('express-validator');
-const { commonRules, validateInput } = require('../middleware/validation');
+const { commonRules, validateInput, sanitizeInput } = require('../middleware/validation');
 const User = require('../models/User');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/emailService');
 const emailValidator = require('deep-email-validator');
@@ -54,6 +54,7 @@ router.get('/health', (req, res) => {
 
 // Register a new user
 router.post('/register',
+  sanitizeInput,
   [
     commonRules.name,
     commonRules.email,
@@ -196,6 +197,7 @@ router.post('/resend-verification',
 
 // Login user
 router.post('/login',
+  sanitizeInput,
   [
     commonRules.email,
     commonRules.password
@@ -205,32 +207,45 @@ router.post('/login',
     try {
       const { email, password } = req.body;
 
-      // Check if user exists
+      // Find user by email
       const user = await User.findOne({ email });
       if (!user) {
-        return res.status(400).json({ error: 'Invalid credentials' });
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+
+      // Check if email is verified
+      if (!user.isEmailVerified) {
+        return res.status(401).json({ 
+          error: 'Email not verified',
+          message: 'Please verify your email before logging in'
+        });
       }
 
       // Check password
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        return res.status(400).json({ error: 'Invalid credentials' });
+        return res.status(401).json({ error: 'Invalid email or password' });
       }
 
-      // Generate JWT
+      // Generate JWT token
       const token = jwt.sign(
         { userId: user._id },
         process.env.JWT_SECRET,
-        { expiresIn: '24h' }
+        { expiresIn: '7d' }
       );
+
+      // Update last activity
+      user.lastActivity = new Date();
+      await user.save();
 
       res.json({
         token,
         user: {
           id: user._id,
-          email: user.email,
           name: user.name,
-          familyEmail: user.familyEmail
+          email: user.email,
+          familyEmail: user.familyEmail,
+          isEmailVerified: user.isEmailVerified
         }
       });
     } catch (error) {
