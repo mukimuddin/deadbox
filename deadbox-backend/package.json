@@ -4,7 +4,7 @@
   "description": "Backend for Deadbox application",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "set NODE_ENV=production&& node index.js",
     "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -29,7 +29,7 @@
     "helmet": "^7.2.0",
     "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.2.1",
+    "mongoose": "^8.2.2",
     "node-cache": "^5.1.2",
     "nodemailer": "^6.9.12",
     "sanitize-html": "^2.15.0",
@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
-    "nodemon": "^2.0.22",
+    "nodemon": "^3.1.0",
     "supertest": "^6.3.4"
   }
 }
