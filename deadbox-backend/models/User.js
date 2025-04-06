@@ -49,6 +49,10 @@ const userSchema = new mongoose.Schema({
   },
   resetPasswordExpires: {
     type: Date
+  },
+  registrationDate: {
+    type: Date,
+    default: Date.now
   }
 }, {
   timestamps: true
@@ -70,6 +74,17 @@ userSchema.pre("save", async function (next) {
 // Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Static method to find unverified accounts older than 7 days
+userSchema.statics.findUnverifiedOlderThan7Days = function() {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  return this.find({
+    isEmailVerified: false,
+    registrationDate: { $lt: sevenDaysAgo }
+  });
 };
 
 module.exports = mongoose.model("User", userSchema);

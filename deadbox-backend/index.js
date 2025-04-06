@@ -19,6 +19,7 @@ const userRoutes = require("./routes/userRoutes");
 const letterRoutes = require("./routes/letterRoutes");
 const authRoutes = require("./routes/auth");
 const { checkInactivity, checkScheduledDeliveries } = require("./services/triggerService");
+const { cleanupUnverifiedAccounts } = require('./services/cleanupService');
 
 const app = express();
 
@@ -43,12 +44,23 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
 
+// Schedule cleanup of unverified accounts
+// Run every day at midnight
+setInterval(cleanupUnverifiedAccounts, 24 * 60 * 60 * 1000);
+
+// Run cleanup on server start
+cleanupUnverifiedAccounts();
+
 // Database connection
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
+  serverSelectionTimeoutMS: 30000,
   socketTimeoutMS: 45000,
+  maxPoolSize: 10,
+  retryWrites: true,
+  retryReads: true,
+  w: 'majority'
 })
 .then(() => {
   console.log("Connected to MongoDB");
@@ -57,7 +69,22 @@ mongoose.connect(process.env.MONGODB_URI, {
 })
 .catch(err => {
   console.error("MongoDB connection error:", err);
-  process.exit(1);
+  setTimeout(() => {
+    console.log("Retrying MongoDB connection...");
+    mongoose.connect(process.env.MONGODB_URI);
+  }, 5000);
+});
+
+// Handle MongoDB disconnection events
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected! Attempting to reconnect...');
+  setTimeout(() => {
+    mongoose.connect(process.env.MONGODB_URI);
+  }, 5000);
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB error:', err);
 });
 
 // Background jobs
@@ -68,11 +95,62 @@ setInterval(async () => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Something went wrong!" });
+  console.error('Error details:', {
+    message: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method
+  });
+
+  // Handle specific types of errors
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      error: 'Validation Error',
+      details: err.message
+    });
+  }
+
+  if (err.name === 'MongoError' || err.name === 'MongoServerError') {
+    return res.status(503).json({
+      error: 'Database Error',
+      message: 'A database error occurred. Please try again later.'
+    });
+  }
+
+  if (err.name === 'JsonWebTokenError') {
+    return res.status(401).json({
+      error: 'Authentication Error',
+      message: 'Invalid or expired token'
+    });
+  }
+
+  // Default error response
+  res.status(err.status || 500).json({
+    error: 'Server Error',
+    message: process.env.NODE_ENV === 'production' 
+      ? 'An unexpected error occurred'
+      : err.message
+  });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  // Give the server time to finish current requests
+  setTimeout(() => {
+    process.exit(1);
+  }, 1000);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit the process, just log the error
 });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+module.exports = app;
