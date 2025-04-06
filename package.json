@@ -1,4 +1,14 @@
 {
+  "name": "deadbox",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "cd deadbox-backend && npm install && npm start",
+    "install": "cd deadbox-backend && npm install"
+  },
+  "engines": {
+    "node": "18.x"
+  },
   "devDependencies": {
     "nodemon": "^3.1.9"
   }
