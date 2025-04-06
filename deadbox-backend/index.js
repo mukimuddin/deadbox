@@ -15,7 +15,7 @@ const cors = require("cors");
 const helmet = require('helmet');
 const { corsOptions, setupSecurity } = require("./middleware/security");
 const errorHandler = require('./middleware/errorHandler');
-const validateInput = require('./middleware/validation');
+const validation = require('./middleware/validation');
 const userRoutes = require("./routes/userRoutes");
 const letterRoutes = require("./routes/letters");
 const authRoutes = require("./routes/auth");
@@ -37,7 +37,7 @@ app.use(express.json());
 setupSecurity(app);
 
 // Apply input validation
-app.use(validateInput);
+app.use(validation.validateInput);
 
 // Log environment and frontend URL
 console.log('Environment:', process.env.NODE_ENV);
