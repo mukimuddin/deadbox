@@ -7,6 +7,22 @@ const { body } = require('express-validator');
 const { commonRules, validateInput } = require('../middleware/validation');
 const User = require('../models/User');
 const { sendEmail } = require('../services/email');
+const emailValidator = require('deep-email-validator');
+
+// Function to validate email
+async function isEmailValid(email) {
+  try {
+    const { valid, reason, validators } = await emailValidator.validate(email);
+    return {
+      valid,
+      reason,
+      validators
+    };
+  } catch (error) {
+    console.error('Email validation error:', error);
+    return { valid: false, reason: 'validation_failed' };
+  }
+}
 
 // Health check endpoint
 router.get('/health', (req, res) => {
@@ -33,11 +49,29 @@ router.post('/register',
         return res.status(400).json({ error: 'User already exists' });
       }
 
+      // Validate primary email
+      const primaryEmailValidation = await isEmailValid(email);
+      if (!primaryEmailValidation.valid) {
+        return res.status(400).json({ 
+          error: 'Invalid email address. Please use a real email.',
+          details: primaryEmailValidation.reason
+        });
+      }
+
+      // Validate family email
+      const familyEmailValidation = await isEmailValid(familyEmail);
+      if (!familyEmailValidation.valid) {
+        return res.status(400).json({ 
+          error: 'Invalid family email address. Please use a real email.',
+          details: familyEmailValidation.reason
+        });
+      }
+
       // Generate verification token
       const verificationToken = crypto.randomBytes(32).toString('hex');
       const verificationExpires = Date.now() + 24 * 3600000; // 24 hours
 
-      // First try to send the verification email before creating the user
+      // First try to send the verification email
       const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
       try {
         await sendEmail({
