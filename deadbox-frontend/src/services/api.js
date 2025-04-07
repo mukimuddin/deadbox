@@ -8,20 +8,13 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  withCredentials: false
+  withCredentials: true,
+  timeout: 10000 // 10 seconds timeout
 });
 
 // Add a request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Log the request (excluding sensitive data)
-    console.log('API Request:', {
-      url: config.url,
-      method: config.method,
-      headers: config.headers,
-      data: config.data ? { ...config.data, password: '[REDACTED]' } : undefined
-    });
-
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -29,7 +22,6 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -37,28 +29,42 @@ api.interceptors.request.use(
 // Add a response interceptor
 api.interceptors.response.use(
   (response) => {
-    // Log the response
-    console.log('API Response:', {
-      url: response.config.url,
-      status: response.status,
-      data: response.data
-    });
     return response;
   },
   (error) => {
-    // Log the error details
-    console.error('API Error:', {
-      url: error.config?.url,
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message
-    });
-
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      const { status, data } = error.response;
+      
+      if (status === 401) {
+        // Unauthorized - clear token and redirect to login
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      } else if (status === 403) {
+        // Forbidden
+        return Promise.reject(new Error(data.message || 'You do not have permission to perform this action'));
+      } else if (status === 404) {
+        // Not found
+        return Promise.reject(new Error(data.message || 'Resource not found'));
+      } else if (status === 500) {
+        // Server error
+        return Promise.reject(new Error(data.message || 'Server error occurred'));
+      }
+      
+      // Handle validation errors
+      if (status === 400 && data.errors) {
+        return Promise.reject(new Error(Object.values(data.errors).join(', ')));
+      }
+      
+      return Promise.reject(new Error(data.message || 'An error occurred'));
+    } else if (error.request) {
+      // The request was made but no response was received
+      return Promise.reject(new Error('No response from server. Please check your connection.'));
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      return Promise.reject(new Error('An error occurred while setting up the request.'));
     }
-    return Promise.reject(error);
   }
 );
 
@@ -72,7 +78,7 @@ export const auth = {
       }
       throw new Error('Invalid response format');
     } catch (error) {
-      throw error.response?.data || error;
+      throw error;
     }
   },
   register: (userData) => api.post('/auth/register', userData),

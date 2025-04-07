@@ -7,13 +7,15 @@ const hpp = require('hpp');
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === 'development' ? 1000 : 100, // More lenient in development
   message: 'Too many requests from this IP, please try again later'
 });
 
 // CORS configuration
 const corsOptions = {
-  origin: true, // Allow all origins in development
+  origin: process.env.NODE_ENV === 'development' 
+    ? 'http://localhost:5173' 
+    : process.env.FRONTEND_URL,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
@@ -48,7 +50,19 @@ const setupSecurity = (app) => {
   app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
     crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: false // Disable CSP in development
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'", process.env.FRONTEND_URL],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"]
+      }
+    }
   }));
   
   // Prevent XSS attacks
