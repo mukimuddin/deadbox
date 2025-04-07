@@ -50,11 +50,15 @@ const SignUp = () => {
 
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    } else if (!/(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]/.test(formData.password)) {
+      newErrors.password = 'Password must contain at least one letter and one number';
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
@@ -95,21 +99,35 @@ const SignUp = () => {
     } catch (error) {
       console.error('Registration error:', error);
       if (error.response?.data?.error) {
-        if (error.response.data.error.includes('Invalid email')) {
-          // Handle email validation errors
-          if (error.response.data.error.includes('family email')) {
-            setErrors(prev => ({
-              ...prev,
-              familyEmail: error.response.data.error
-            }));
+        if (typeof error.response.data.error === 'string') {
+          if (error.response.data.error.includes('Invalid email')) {
+            // Handle email validation errors
+            if (error.response.data.error.includes('family email')) {
+              setErrors(prev => ({
+                ...prev,
+                familyEmail: error.response.data.error
+              }));
+            } else {
+              setErrors(prev => ({
+                ...prev,
+                email: error.response.data.error
+              }));
+            }
           } else {
-            setErrors(prev => ({
-              ...prev,
-              email: error.response.data.error
-            }));
+            setGeneralError(error.response.data.error);
           }
+        } else if (error.response.data.details) {
+          // Handle validation errors from backend
+          const backendErrors = {};
+          error.response.data.details.forEach(detail => {
+            backendErrors[detail.field] = detail.message;
+          });
+          setErrors(prev => ({
+            ...prev,
+            ...backendErrors
+          }));
         } else {
-          setGeneralError(error.response.data.error);
+          setGeneralError('Registration failed. Please check your input and try again.');
         }
       } else {
         setGeneralError('Registration failed. Please try again.');
@@ -174,7 +192,12 @@ const SignUp = () => {
               value={formData.password}
               onChange={handleChange}
               className={errors.password ? 'error' : ''}
+              minLength="8"
+              required
             />
+            <small className="input-help">
+              Password must be at least 8 characters long and contain at least one letter and one number
+            </small>
             {errors.password && <span className="error-message">{errors.password}</span>}
           </div>
 
@@ -187,6 +210,8 @@ const SignUp = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               className={errors.confirmPassword ? 'error' : ''}
+              minLength="8"
+              required
             />
             {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
           </div>
