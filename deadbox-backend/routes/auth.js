@@ -203,10 +203,12 @@ router.post('/resend-verification',
 
 // Login user
 router.post('/login', async (req, res) => {
+  console.log('Login route: Received login request for email:', req.body.email);
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
+      console.log('Login route: Missing email or password.');
       return res.status(400).json({ 
         message: 'Email and password are required'
       });
@@ -220,19 +222,27 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    console.log('Login route: Found user:', user.email);
+    
     if (!user.isEmailVerified) {
+      console.log('Login route: Email not verified for user:', user.email);
       return res.status(401).json({ 
         message: 'Please verify your email before logging in',
         needsVerification: true
       });
     }
 
+    console.log('Login route: Comparing password for user:', user.email);
     const isMatch = await user.comparePassword(password);
+    console.log('Login route: Password match result:', isMatch);
     if (!isMatch) {
+      console.log('Login route: Invalid password for user:', user.email);
       return res.status(401).json({ 
         message: 'Invalid email or password'
       });
     }
+
+    console.log('Login route: Login successful for user:', user.email);
 
     const token = jwt.sign(
       { userId: user._id },
@@ -256,7 +266,7 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Login route: Login error:', error);
     res.status(500).json({ 
       message: 'An error occurred during login'
     });
@@ -312,6 +322,7 @@ router.post('/reset-password/:token',
   ],
   validateInput,
   async (req, res) => {
+    console.log('Reset password route: Received request for token:', req.params.token);
     try {
       const { token } = req.params;
       const { password } = req.body;
@@ -322,17 +333,23 @@ router.post('/reset-password/:token',
       });
 
       if (!user) {
+        console.log('Reset password route: Invalid or expired token:', token);
         return res.status(400).json({ error: 'Invalid or expired reset token' });
       }
 
+      console.log('Reset password route: Found user:', user.email);
       // Set the new password (it will be hashed by the pre-save middleware)
       user.password = password;
       user.resetPasswordToken = undefined;
       user.resetPasswordExpires = undefined;
+      
+      console.log('Reset password route: Attempting to save new password for user:', user.email);
       await user.save();
+      console.log('Reset password route: New password saved successfully for user:', user.email);
 
       res.json({ message: 'Password reset successful' });
     } catch (error) {
+      console.error('Reset password route: Error resetting password:', error);
       res.status(500).json({ error: error.message });
     }
   }

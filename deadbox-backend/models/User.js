@@ -60,20 +60,29 @@ const userSchema = new mongoose.Schema({
 
 // Hash password before saving
 userSchema.pre("save", async function (next) {
+  // Only hash the password if it has been modified (or is new)
   if (!this.isModified("password")) return next();
   
+  console.log('User model: pre-save hook triggered for password modification.');
+  
   try {
+    console.log('User model: Hashing password...');
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
+    console.log('User model: Password hashed successfully.');
     next();
   } catch (error) {
+    console.error('User model: Error hashing password:', error);
     next(error);
   }
 });
 
 // Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  console.log('User model: Comparing password for user:', this.email);
+  const isMatch = await bcrypt.compare(candidatePassword, this.password);
+  console.log('User model: Password comparison result:', isMatch);
+  return isMatch;
 };
 
 // Static method to find unverified accounts older than 7 days

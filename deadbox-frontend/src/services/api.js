@@ -1,36 +1,32 @@
 import axios from 'axios';
 
-// Get the base URL from environment variables
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-// Create axios instance
 const api = axios.create({
-  baseURL: `${baseURL}/api`,
+  baseURL: import.meta.env.VITE_API_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
-  },
-  withCredentials: true
+  }
 });
 
-// Add a request interceptor
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Add token to headers if it exists
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
+    
     // Log request in development
     if (import.meta.env.DEV) {
-      console.log('API Request:', {
+      console.log('Request:', {
         url: config.url,
         method: config.method,
-        headers: config.headers
+        headers: config.headers,
+        data: config.data
       });
     }
-
+    
     return config;
   },
   (error) => {
@@ -38,12 +34,12 @@ api.interceptors.request.use(
   }
 );
 
-// Add a response interceptor
+// Response interceptor
 api.interceptors.response.use(
   (response) => {
     // Log response in development
     if (import.meta.env.DEV) {
-      console.log('API Response:', {
+      console.log('Response:', {
         url: response.config.url,
         status: response.status,
         data: response.data
@@ -52,23 +48,21 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Handle unauthorized errors
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
-    }
-
-    // Log errors in development
+    // Log error in development
     if (import.meta.env.DEV) {
-      console.error('API Error:', {
+      console.error('Error:', {
         url: error.config?.url,
         status: error.response?.status,
         data: error.response?.data
       });
     }
-
+    
+    // Handle 401 Unauthorized errors
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    
     return Promise.reject(error);
   }
 );
