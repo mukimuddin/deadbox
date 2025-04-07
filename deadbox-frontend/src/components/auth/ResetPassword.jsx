@@ -13,6 +13,16 @@ const ResetPassword = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  const validatePassword = (password) => {
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters long';
+    }
+    if (!/(?=.*[A-Za-z])(?=.*\d)/.test(password)) {
+      return 'Password must contain at least one letter and one number';
+    }
+    return null;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -30,8 +40,9 @@ const ResetPassword = () => {
       return;
     }
 
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      toast.error(passwordError);
       return;
     }
 
@@ -54,7 +65,11 @@ const ResetPassword = () => {
       }, 3000);
     } catch (error) {
       console.error('Reset password error:', error);
-      toast.error(error.message || 'Failed to reset password. Please try again.');
+      if (error.message.includes('Invalid or expired')) {
+        toast.error('This reset link has expired. Please request a new one.');
+      } else {
+        toast.error(error.message || 'Failed to reset password. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -74,10 +89,13 @@ const ResetPassword = () => {
               value={formData.password}
               onChange={handleChange}
               placeholder="Enter your new password"
-              minLength="6"
+              minLength="8"
               required
               disabled={isLoading}
             />
+            <small className="input-help">
+              Password must be at least 8 characters long and contain at least one letter and one number
+            </small>
           </div>
 
           <div className="form-group">
@@ -89,7 +107,7 @@ const ResetPassword = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Confirm your new password"
-              minLength="6"
+              minLength="8"
               required
               disabled={isLoading}
             />
