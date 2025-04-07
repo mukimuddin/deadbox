@@ -14,9 +14,9 @@ const limiter = rateLimit({
 // CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'development' 
-    ? 'http://localhost:5173' 
-    : process.env.FRONTEND_URL,
-  credentials: true,
+    ? ['http://localhost:5173', 'http://localhost:3000'] 
+    : [process.env.FRONTEND_URL, 'https://deadbox.vercel.app', 'https://deadbox-git-main-your-username.vercel.app'],
+  credentials: false,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
