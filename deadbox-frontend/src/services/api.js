@@ -8,8 +8,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  withCredentials: true,
-  timeout: 10000 // 10 seconds timeout
+  withCredentials: false
 });
 
 // Add a request interceptor
@@ -32,39 +31,13 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      const { status, data } = error.response;
-      
-      if (status === 401) {
-        // Unauthorized - clear token and redirect to login
-        localStorage.removeItem('token');
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      if (window.location.pathname !== '/login') {
         window.location.href = '/login';
-      } else if (status === 403) {
-        // Forbidden
-        return Promise.reject(new Error(data.message || 'You do not have permission to perform this action'));
-      } else if (status === 404) {
-        // Not found
-        return Promise.reject(new Error(data.message || 'Resource not found'));
-      } else if (status === 500) {
-        // Server error
-        return Promise.reject(new Error(data.message || 'Server error occurred'));
       }
-      
-      // Handle validation errors
-      if (status === 400 && data.errors) {
-        return Promise.reject(new Error(Object.values(data.errors).join(', ')));
-      }
-      
-      return Promise.reject(new Error(data.message || 'An error occurred'));
-    } else if (error.request) {
-      // The request was made but no response was received
-      return Promise.reject(new Error('No response from server. Please check your connection.'));
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      return Promise.reject(new Error('An error occurred while setting up the request.'));
     }
+    return Promise.reject(error);
   }
 );
 
@@ -72,13 +45,15 @@ export const auth = {
   login: async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
-      if (response.data.data) {
-        localStorage.setItem('token', response.data.data.token);
+      if (response.data?.data) {
         return response.data.data;
       }
       throw new Error('Invalid response format');
     } catch (error) {
-      throw error;
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Failed to login. Please try again.');
     }
   },
   register: (userData) => api.post('/auth/register', userData),

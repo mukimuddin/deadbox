@@ -21,7 +21,9 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       auth.getProfile()
         .then(response => {
-          setUser(response.data);
+          if (response.data) {
+            setUser(response.data);
+          }
         })
         .catch(() => {
           localStorage.removeItem('token');
@@ -38,12 +40,16 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await auth.login(email, password);
-      localStorage.setItem('token', response.data.token);
-      setUser(response.data.user);
-      toast.success('Successfully logged in!');
-      return response.data;
+      if (response && response.token && response.user) {
+        localStorage.setItem('token', response.token);
+        setUser(response.user);
+        toast.success('Successfully logged in!');
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      localStorage.removeItem('token');
+      setUser(null);
       throw error;
     }
   };
@@ -58,10 +64,17 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await auth.register(userData);
       toast.success('Registration successful! Please verify your email.');
-      return response.data;
+      return response;
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed');
       throw error;
+    }
+  };
+
+  const resendVerification = async (email) => {
+    try {
+      await auth.resendVerification(email);
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to resend verification email');
     }
   };
 
@@ -70,7 +83,9 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
-    register
+    register,
+    resendVerification,
+    isAuthenticated: !!user
   };
 
   return (

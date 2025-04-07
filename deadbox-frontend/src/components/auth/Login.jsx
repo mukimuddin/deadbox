@@ -1,20 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import './Auth.css';
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { login, resendVerification } = useAuth();
 
   useEffect(() => {
+    // Check URL parameters for verification status
+    const verified = searchParams.get('verified');
+    const error = searchParams.get('error');
+
+    if (verified === 'true') {
+      toast.success('Email verified successfully! You can now log in.');
+    } else if (error === 'invalid_token') {
+      toast.error('Invalid or expired verification link.');
+    } else if (error === 'verification_failed') {
+      toast.error('Email verification failed. Please try again.');
+    }
+
+    // Check location state for other messages
     if (location.state?.message) {
       if (location.state.type === 'success') {
         toast.success(location.state.message);
@@ -22,33 +34,52 @@ const Login = () => {
         toast.error(location.state.message);
       }
     }
-  }, [location]);
+  }, [location, searchParams]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'email' ? value.trim() : value
-    }));
+  const handleResendVerification = async () => {
+    try {
+      await resendVerification(email);
+      toast.success('Verification email sent! Please check your inbox.');
+    } catch (error) {
+      toast.error(error.message || 'Failed to resend verification email');
+    }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.email || !formData.password) {
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    
+    if (!email || !password) {
       toast.error('Please fill in all fields');
       return;
     }
 
     setIsLoading(true);
     try {
-      const result = await login(formData.email, formData.password);
-      if (result.user) {
-        toast.success('Successfully logged in!');
-        navigate('/');
-      }
+      await login(email, password);
+      navigate('/', { replace: true });
     } catch (error) {
-      toast.error(error.message || 'Failed to login. Please try again.');
-    } finally {
+      if (error.message.includes('verify your email')) {
+        toast.error(
+          <div>
+            Please verify your email before logging in.
+            <button 
+              onClick={handleResendVerification}
+              style={{ 
+                marginLeft: '10px',
+                background: 'none',
+                border: 'none',
+                color: '#4299e1',
+                textDecoration: 'underline',
+                cursor: 'pointer'
+              }}
+            >
+              Resend verification email
+            </button>
+          </div>
+        );
+      } else {
+        toast.error(error.message || 'Failed to login');
+      }
       setIsLoading(false);
     }
   };
@@ -57,19 +88,17 @@ const Login = () => {
     <div className="auth-container">
       <div className="auth-box">
         <h2>Sign in to your account</h2>
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="email">Email address</label>
             <input
               id="email"
-              name="email"
               type="email"
-              autoComplete="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
+              value={email}
+              onChange={(e) => setEmail(e.target.value.trim())}
               placeholder="Enter your email"
               disabled={isLoading}
+              required
             />
           </div>
 
@@ -77,20 +106,18 @@ const Login = () => {
             <label htmlFor="password">Password</label>
             <input
               id="password"
-              name="password"
               type="password"
-              autoComplete="current-password"
-              required
-              value={formData.password}
-              onChange={handleChange}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               disabled={isLoading}
+              required
             />
           </div>
 
           <button 
             type="submit" 
-            disabled={isLoading || !formData.email || !formData.password} 
+            disabled={isLoading || !email || !password}
             className="auth-button"
           >
             {isLoading ? 'Signing in...' : 'Sign in'}

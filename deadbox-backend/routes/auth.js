@@ -141,13 +141,16 @@ router.post('/register',
 router.get('/verify-email/:token', async (req, res) => {
   try {
     const { token } = req.params;
+    console.log('Verifying email with token:', token);
+
     const user = await User.findOne({
       emailVerificationToken: token,
       emailVerificationExpires: { $gt: Date.now() }
     });
 
     if (!user) {
-      return res.status(400).json({ error: 'Invalid or expired verification token' });
+      console.log('Invalid or expired token');
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=invalid_token`);
     }
 
     user.isEmailVerified = true;
@@ -155,9 +158,11 @@ router.get('/verify-email/:token', async (req, res) => {
     user.emailVerificationExpires = undefined;
     await user.save();
 
-    res.json({ message: 'Email verified successfully' });
+    console.log('Email verified successfully for user:', user.email);
+    return res.redirect(`${process.env.FRONTEND_URL}/login?verified=true`);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Email verification error:', error);
+    return res.redirect(`${process.env.FRONTEND_URL}/login?error=verification_failed`);
   }
 });
 
@@ -201,29 +206,27 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Basic validation
     if (!email || !password) {
       return res.status(400).json({ 
         message: 'Email and password are required'
       });
     }
 
-    // Find user by email
     const user = await User.findOne({ email: email.toLowerCase() });
+    
     if (!user) {
       return res.status(401).json({ 
         message: 'Invalid email or password'
       });
     }
 
-    // Check if email is verified
     if (!user.isEmailVerified) {
       return res.status(401).json({ 
-        message: 'Please verify your email before logging in'
+        message: 'Please verify your email before logging in',
+        needsVerification: true
       });
     }
 
-    // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ 
@@ -231,20 +234,16 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Generate token
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    // Update last activity
     user.lastActivity = new Date();
     await user.save();
 
-    // Send response
-    res.status(200).json({
-      message: 'Login successful',
+    res.json({
       data: {
         token,
         user: {
