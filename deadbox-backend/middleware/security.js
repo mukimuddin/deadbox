@@ -13,14 +13,33 @@ const limiter = rateLimit({
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'development' 
-    ? ['http://localhost:5173', 'http://localhost:3000'] 
-    : [process.env.FRONTEND_URL, 'https://deadbox.vercel.app', 'https://deadbox-git-main-your-username.vercel.app'],
-  credentials: false,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://deadbox.vercel.app',
+      'https://deadbox-git-main.vercel.app',
+      'https://deadbox-git-main-your-username.vercel.app'
+    ];
+
+    if (process.env.NODE_ENV === 'development') {
+      callback(null, true); // Allow all origins in development
+    } else if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true); // Allow specific origins in production
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 600, // 10 minutes
+  maxAge: 86400, // 24 hours
   preflightContinue: false,
   optionsSuccessStatus: 204
 };
