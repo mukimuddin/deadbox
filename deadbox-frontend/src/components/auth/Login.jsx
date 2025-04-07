@@ -5,8 +5,10 @@ import { toast } from 'react-hot-toast';
 import './Auth.css';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -22,21 +24,30 @@ const Login = () => {
     }
   }, [location]);
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'email' ? value.trim() : value
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (!formData.email || !formData.password) {
+      toast.error('Please fill in all fields');
+      return;
+    }
 
+    setIsLoading(true);
     try {
-      console.log('Attempting login with email:', email);
-      await login(email, password);
-      toast.success('Successfully logged in!');
-      navigate('/');
+      const result = await login(formData.email, formData.password);
+      if (result.user) {
+        toast.success('Successfully logged in!');
+        navigate('/');
+      }
     } catch (error) {
-      console.error('Login error:', error);
-      const errorMessage = error.response?.data?.message || 
-                         error.response?.data?.error || 
-                         'Failed to login. Please try again.';
-      toast.error(errorMessage);
+      toast.error(error.message || 'Failed to login. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -55,8 +66,8 @@ const Login = () => {
               type="email"
               autoComplete="email"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value.trim())}
+              value={formData.email}
+              onChange={handleChange}
               placeholder="Enter your email"
               disabled={isLoading}
             />
@@ -70,8 +81,8 @@ const Login = () => {
               type="password"
               autoComplete="current-password"
               required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.password}
+              onChange={handleChange}
               placeholder="Enter your password"
               disabled={isLoading}
             />
@@ -79,7 +90,7 @@ const Login = () => {
 
           <button 
             type="submit" 
-            disabled={isLoading || !email || !password} 
+            disabled={isLoading || !formData.email || !formData.password} 
             className="auth-button"
           >
             {isLoading ? 'Signing in...' : 'Sign in'}

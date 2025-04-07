@@ -22,13 +22,6 @@ api.interceptors.request.use(
       data: config.data ? { ...config.data, password: '[REDACTED]' } : undefined
     });
 
-    // Ensure headers are set
-    config.headers = {
-      ...config.headers,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    };
-    
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -44,7 +37,7 @@ api.interceptors.request.use(
 // Add a response interceptor
 api.interceptors.response.use(
   (response) => {
-    // Log the response (excluding sensitive data)
+    // Log the response
     console.log('API Response:', {
       url: response.config.url,
       status: response.status,
@@ -73,20 +66,20 @@ export const auth = {
   login: async (email, password) => {
     try {
       const response = await api.post('/auth/login', { email, password });
-      return response;
+      if (response.data.data) {
+        localStorage.setItem('token', response.data.data.token);
+        return response.data.data;
+      }
+      throw new Error('Invalid response format');
     } catch (error) {
-      console.error('Login error:', error.response?.data || error.message);
-      throw error;
+      throw error.response?.data || error;
     }
   },
   register: (userData) => api.post('/auth/register', userData),
   getProfile: () => api.get('/users/profile'),
   updateProfile: (userData) => api.patch('/users/profile', userData),
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-  resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { 
-    password,
-    confirmPassword: password
-  }),
+  resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
   verifyEmail: (token) => api.get(`/auth/verify-email/${token}`),
   resendVerification: (email) => api.post('/auth/resend-verification', { email })
 };
