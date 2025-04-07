@@ -62,6 +62,7 @@ const Login = () => {
       await login(email, password);
       navigate('/', { replace: true });
     } catch (error) {
+      console.error('Login error:', error);
       if (error.message.includes('verify your email')) {
         toast.error(
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

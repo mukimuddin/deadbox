@@ -28,6 +28,7 @@ const corsOptions = {
     if (process.env.NODE_ENV === 'development' || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.error('CORS error: Origin not allowed:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
