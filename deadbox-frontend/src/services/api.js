@@ -109,7 +109,10 @@ export const auth = {
   },
   resetPassword: async (token, password) => {
     try {
-      const response = await api.post(`/auth/reset-password/${token}`, { password });
+      const response = await api.post(`/auth/reset-password/${token}`, { 
+        password,
+        confirmPassword: password 
+      });
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to reset password');

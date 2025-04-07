@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { auth } from '../../services/api';
+import { toast } from 'react-hot-toast';
 import './Auth.css';
 
 const ResetPassword = () => {
@@ -10,8 +11,6 @@ const ResetPassword = () => {
     password: '',
     confirmPassword: ''
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -20,35 +19,31 @@ const ResetPassword = () => {
       ...prev,
       [name]: value
     }));
-    // Clear errors when user starts typing
-    setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
 
     // Validate inputs
     if (!formData.password || !formData.confirmPassword) {
-      setError('Both password fields are required');
+      toast.error('Both password fields are required');
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      toast.error('Password must be at least 6 characters long');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await auth.resetPassword(token, formData.password);
-      setSuccess('Password reset successful! Redirecting to login...');
+      await auth.resetPassword(token, formData.password);
+      toast.success('Password reset successful! Redirecting to login...');
       setTimeout(() => {
         navigate('/login', { 
           state: { 
@@ -59,13 +54,7 @@ const ResetPassword = () => {
       }, 3000);
     } catch (error) {
       console.error('Reset password error:', error);
-      if (error.response?.data?.error) {
-        setError(error.response.data.error);
-      } else if (error.response?.status === 400) {
-        setError('Invalid or expired reset link. Please request a new password reset.');
-      } else {
-        setError('Failed to reset password. Please try again or request a new reset link.');
-      }
+      toast.error(error.message || 'Failed to reset password. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +64,7 @@ const ResetPassword = () => {
     <div className="auth-container">
       <div className="auth-box">
         <h2>Reset Password</h2>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
             <label htmlFor="password">New Password</label>
             <input
@@ -85,9 +74,9 @@ const ResetPassword = () => {
               value={formData.password}
               onChange={handleChange}
               placeholder="Enter your new password"
-              className={error ? 'error' : ''}
               minLength="6"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -100,16 +89,17 @@ const ResetPassword = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Confirm your new password"
-              className={error ? 'error' : ''}
               minLength="6"
               required
+              disabled={isLoading}
             />
           </div>
 
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
-
-          <button type="submit" disabled={isLoading}>
+          <button 
+            type="submit" 
+            disabled={isLoading || !formData.password || !formData.confirmPassword}
+            className="auth-button"
+          >
             {isLoading ? 'Resetting Password...' : 'Reset Password'}
           </button>
         </form>
