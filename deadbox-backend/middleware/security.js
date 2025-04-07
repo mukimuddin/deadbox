@@ -13,30 +13,11 @@ const limiter = rateLimit({
 
 // CORS configuration
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'https://deadbox.vercel.app',
-      'https://deadbox-git-main.vercel.app',
-      'https://deadbox-git-main-your-username.vercel.app'
-    ];
-
-    if (process.env.NODE_ENV === 'development') {
-      callback(null, true); // Allow all origins in development
-    } else if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-      callback(null, true); // Allow specific origins in production
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: process.env.NODE_ENV === 'development' 
+    ? true // Allow all origins in development
+    : ['https://deadbox.vercel.app', 'https://deadbox-git-main.vercel.app'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   maxAge: 86400, // 24 hours
@@ -75,8 +56,8 @@ const setupSecurity = (app) => {
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", process.env.FRONTEND_URL],
-        fontSrc: ["'self'"],
+        connectSrc: ["'self'", "*"],
+        fontSrc: ["'self'", "https:", "data:"],
         objectSrc: ["'none'"],
         mediaSrc: ["'self'"],
         frameSrc: ["'none'"]
