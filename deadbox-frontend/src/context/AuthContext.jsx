@@ -57,7 +57,10 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
-    toast.success('Successfully logged out');
+    toast.success('Successfully logged out! See you again soon.', {
+      icon: '✓',
+      duration: 3000
+    });
   };
 
   const register = async (userData) => {

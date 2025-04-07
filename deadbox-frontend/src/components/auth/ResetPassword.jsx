@@ -54,7 +54,9 @@ const ResetPassword = () => {
     setIsLoading(true);
     try {
       await auth.resetPassword(token, formData.password);
-      toast.success('Password reset successful! Redirecting to login...');
+      toast.success('Password reset successful! Redirecting to login...', {
+        icon: '✓'
+      });
       setTimeout(() => {
         navigate('/login', { 
           state: { 

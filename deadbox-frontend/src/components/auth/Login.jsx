@@ -19,7 +19,9 @@ const Login = () => {
     const error = searchParams.get('error');
 
     if (verified === 'true') {
-      toast.success('Email verified successfully! You can now log in.');
+      toast.success('Email verified successfully! You can now log in.', {
+        icon: '✓'
+      });
     } else if (error === 'invalid_token') {
       toast.error('Invalid or expired verification link.');
     } else if (error === 'verification_failed') {
@@ -29,7 +31,9 @@ const Login = () => {
     // Check location state for other messages
     if (location.state?.message) {
       if (location.state.type === 'success') {
-        toast.success(location.state.message);
+        toast.success(location.state.message, {
+          icon: '✓'
+        });
       } else {
         toast.error(location.state.message);
       }
@@ -60,22 +64,30 @@ const Login = () => {
     } catch (error) {
       if (error.message.includes('verify your email')) {
         toast.error(
-          <div>
-            Please verify your email before logging in.
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>Please verify your email before logging in.</span>
             <button 
               onClick={handleResendVerification}
               style={{ 
-                marginLeft: '10px',
-                background: 'none',
+                padding: '4px 8px',
+                background: '#4299e1',
+                color: 'white',
                 border: 'none',
-                color: '#4299e1',
-                textDecoration: 'underline',
-                cursor: 'pointer'
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                whiteSpace: 'nowrap'
               }}
             >
-              Resend verification email
+              Resend verification
             </button>
-          </div>
+          </div>,
+          {
+            duration: 5000,
+            style: {
+              maxWidth: '500px'
+            }
+          }
         );
       } else {
         toast.error(error.message || 'Failed to login');
