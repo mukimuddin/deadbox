@@ -60,6 +60,10 @@ const Login = () => {
     setIsLoading(true);
     try {
       await login(email, password);
+      toast.success('Successfully logged in!', {
+        icon: '✓',
+        duration: 3000
+      });
       navigate('/', { replace: true });
     } catch (error) {
       console.error('Login error:', error);
@@ -91,7 +95,7 @@ const Login = () => {
           }
         );
       } else {
-        toast.error(error.message || 'Failed to login');
+        toast.error(error.message || 'Failed to login. Please try again.');
       }
       setIsLoading(false);
     }

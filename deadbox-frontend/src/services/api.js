@@ -83,6 +83,8 @@ export const auth = {
     } catch (error) {
       if (error.response?.data?.message) {
         throw new Error(error.response.data.message);
+      } else if (error.message === 'Network Error') {
+        throw new Error('Unable to connect to the server. Please check your internet connection.');
       }
       throw new Error('Failed to login. Please try again.');
     }
